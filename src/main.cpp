@@ -1,64 +1,53 @@
 #include <Arduino.h>
 
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
-#include <BLE2902.h>
+#include <ArduinoBLE.h>
 
-const uint16_t serviceUuid = 0xFFE0;
-const uint16_t characteristicUuid = 0xFFE1;
+const char serviceUuid[] = "ffe0";
+const char characteristicUuid[] = "ffe1";
 
-BLEServer *pServer = NULL;
-BLEService *pService = NULL;
-BLECharacteristic *pCharacteristic = NULL;
+BLEService myService(serviceUuid);
+BLECharacteristic myCharacteristic(characteristicUuid, BLERead | BLEWriteWithoutResponse | BLENotify, 20);
+
 bool deviceConnected = false;
-bool oldDeviceConnected = false;
+char buffer[128];
+int bufferI = 0;
+unsigned long lastMillis = 0;
 
-class MyServerCallbacks : public BLEServerCallbacks
+void onConnect(BLEDevice device)
 {
-  void onConnect(BLEServer *pServer)
-  {
-    deviceConnected = true;
-  };
+  deviceConnected = true;
+  Serial.println("Device connected!");
+}
 
-  void onDisconnect(BLEServer *pServer)
-  {
-    deviceConnected = false;
-  }
-};
-
-class MyCharacteristicCallbacks : public BLECharacteristicCallbacks
+void onDisconnect(BLEDevice device)
 {
-  void onWrite(BLECharacteristic *pCharacteristic)
-  {
-    Serial.println("Central device has written to the characteristic!");
-    std::string rxValue = pCharacteristic->getValue();
+  deviceConnected = false;
+  Serial.println("Device disconnected!");
+}
 
-    if (rxValue.length() > 0)
+void onWrite(BLEDevice device, BLECharacteristic characteristic)
+{
+  Serial.println("Central device has written to the characteristic!");
+
+  const uint8_t *data = characteristic.value();
+  int length = characteristic.valueLength();
+
+  for (int i = 0; i < length; i++)
+  {
+    const char _char = (char)data[i];
+    buffer[bufferI++] = _char;
+
+    if (_char == '\n')
     {
-      Serial.print("Received messages: \"");
-
-      for (int i = 0; i < rxValue.length(); i++)
-      {
-        Serial.print(rxValue[i]);
-      }
-
+      buffer[bufferI] = '\0';
+      Serial.print("Received message: \"");
+      Serial.print(buffer);
       Serial.println("\"");
+
+      bufferI = 0;
     }
   }
-
-  void onRead(BLECharacteristic *pCharacteristic)
-  {
-    // Handle the read event (e.g., return the sensor data)
-    Serial.println("Central device is reading the characteristic!");
-  }
-
-  void onNotify(BLECharacteristic *pCharacteristic)
-  {
-    // Handle notification event
-    Serial.println("Notification sent!");
-  }
-};
+}
 
 void setup()
 {
@@ -66,54 +55,43 @@ void setup()
 
   Serial.println("Set up BLE...");
 
-  BLEDevice::init("ESP32");
+  if (!BLE.begin())
+  {
+    Serial.println("Failed!");
+    while (true)
+      ;
+  }
 
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
+  BLE.setLocalName("ESP32");
+  BLE.setDeviceName("ESP32");
 
-  pService = pServer->createService(serviceUuid);
+  BLE.setEventHandler(BLEConnected, onConnect);
+  BLE.setEventHandler(BLEDisconnected, onDisconnect);
 
-  pCharacteristic = pService->createCharacteristic(
-      characteristicUuid,
-      BLECharacteristic::PROPERTY_READ |
-          BLECharacteristic::PROPERTY_WRITE |
-          BLECharacteristic::PROPERTY_NOTIFY);
-  pCharacteristic->addDescriptor(new BLE2902());
-  pCharacteristic->setCallbacks(new MyCharacteristicCallbacks());
+  myService.addCharacteristic(myCharacteristic);
+  myCharacteristic.setEventHandler(BLEWritten, onWrite);
+  BLE.addService(myService);
 
-  pService->start();
-
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(serviceUuid);
-  pAdvertising->setScanResponse(false);
-  pAdvertising->setMinPreferred(0x0);
-  BLEDevice::startAdvertising();
+  BLE.setAdvertisedService(myService);
+  BLE.advertise();
 
   Serial.println("BLE setup was successful!");
 }
 
 void loop()
 {
-  if (deviceConnected)
+  unsigned long currentMillis = millis();
+
+  if (currentMillis > lastMillis + 1000)
   {
-    pCharacteristic->setValue("Test\n");
-    pCharacteristic->notify();
-    Serial.println("Device is connected, idle...");
-    delay(1000);
+    lastMillis = currentMillis;
+
+    if (deviceConnected)
+    {
+      myCharacteristic.setValue("Test\n");
+      Serial.println("Device is connected, idle...");
+    }
   }
 
-  if (!deviceConnected && oldDeviceConnected)
-  {
-    Serial.println("Device disconnected!");
-    delay(1000);
-    pServer->startAdvertising();
-    Serial.println("Start advertising");
-    oldDeviceConnected = deviceConnected;
-  }
-
-  if (deviceConnected && !oldDeviceConnected)
-  {
-    oldDeviceConnected = deviceConnected;
-    Serial.println("Device connected!");
-  }
+  BLE.poll();
 }
