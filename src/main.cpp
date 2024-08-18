@@ -10,21 +10,21 @@ void setup()
   Serial.begin(115200);
 
   Serial.println("Setting up Bluetooth Terminal...");
-  bluetoothTerminal.begin();
-  Serial.println("Bluetooth Terminal setup was successful!");
+  bluetoothTerminal.setup();
+  Serial.println("Bluetooth Terminal setup was successful.");
 }
 
 void loop()
 {
   unsigned long currentMillis = millis();
 
-  if (currentMillis > lastMillis + 1000)
+  if (currentMillis > lastMillis + 10000)
   {
     lastMillis = currentMillis;
 
-    if (bluetoothTerminal.isDeviceConnected())
+    if (bluetoothTerminal.isConnected())
     {
-      bluetoothTerminal.send("Test\n");
+      bluetoothTerminal.send("Hello, world!");
     }
   }
 
