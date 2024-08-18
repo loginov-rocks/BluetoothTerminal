@@ -8,7 +8,32 @@ BluetoothTerminal &BluetoothTerminal::getInstance()
   return instance;
 }
 
-void BluetoothTerminal::setup()
+void BluetoothTerminal::onConnect(ConnectHandler handler)
+{
+  BluetoothTerminal::getInstance().connectHandler = handler;
+}
+
+void BluetoothTerminal::onDisconnect(DisconnectHandler handler)
+{
+  BluetoothTerminal::getInstance().disconnectHandler = handler;
+}
+
+void BluetoothTerminal::onReceive(ReceiveHandler handler)
+{
+  BluetoothTerminal::getInstance().receiveHandler = handler;
+}
+
+void BluetoothTerminal::setReceiveSeparator(char separator)
+{
+  BluetoothTerminal::getInstance().receiveSeparator = separator;
+}
+
+void BluetoothTerminal::setSendSeparator(char separator)
+{
+  BluetoothTerminal::getInstance().sendSeparator = separator;
+}
+
+void BluetoothTerminal::start()
 {
   Serial.print("[BluetoothTerminal] Starting BLE service...");
   if (!BLE.begin())
@@ -17,19 +42,20 @@ void BluetoothTerminal::setup()
     return;
   }
   Serial.println(" successful.");
+
   Serial.println("[BluetoothTerminal] Setting up BLE service and characteristic...");
 
   // TODO: Make configurable.
   BLE.setLocalName("ESP32");
   BLE.setDeviceName("ESP32");
 
-  BLE.setEventHandler(BLEConnected, BluetoothTerminal::onConnectedStatic);
-  BLE.setEventHandler(BLEDisconnected, BluetoothTerminal::onDisconnectedStatic);
+  BLE.setEventHandler(BLEConnected, BluetoothTerminal::handleConnectedStatic);
+  BLE.setEventHandler(BLEDisconnected, BluetoothTerminal::handleDisconnectedStatic);
 
   BluetoothTerminal instance = BluetoothTerminal::getInstance();
 
   instance.bleService.addCharacteristic(instance.bleCharacteristic);
-  instance.bleCharacteristic.setEventHandler(BLEWritten, BluetoothTerminal::onWrittenStatic);
+  instance.bleCharacteristic.setEventHandler(BLEWritten, BluetoothTerminal::handleWrittenStatic);
   BLE.addService(instance.bleService);
 
   BLE.setAdvertisedService(instance.bleService);
@@ -41,6 +67,11 @@ void BluetoothTerminal::setup()
 void BluetoothTerminal::loop()
 {
   BLE.poll();
+}
+
+bool BluetoothTerminal::isConnected()
+{
+  return BluetoothTerminal::getInstance().deviceConnected;
 }
 
 void BluetoothTerminal::send(const char *message)
@@ -59,7 +90,7 @@ void BluetoothTerminal::send(const char *message)
 
   size_t length = strlen(message);
 
-  // TODO: Implement a send buffer to accommodate messages larger than the
+  // TODO: Implement a send buffer to accommodate messages longer than the
   // characteristic value size.
   if (length > instance.characteristicValueSize - 1)
   {
@@ -83,67 +114,62 @@ void BluetoothTerminal::send(const char *message)
   Serial.println(" sent.");
 }
 
-bool BluetoothTerminal::isConnected()
+void BluetoothTerminal::handleConnectedStatic(BLEDevice device)
 {
-  return BluetoothTerminal::getInstance().deviceConnected;
+  BluetoothTerminal::getInstance().handleConnected(device);
 }
 
-void BluetoothTerminal::setReceiveSeparator(char separator)
+void BluetoothTerminal::handleDisconnectedStatic(BLEDevice device)
 {
-  BluetoothTerminal::getInstance().receiveSeparator = separator;
+  BluetoothTerminal::getInstance().handleDisconnected(device);
 }
 
-void BluetoothTerminal::setSendSeparator(char separator)
+void BluetoothTerminal::handleWrittenStatic(BLEDevice device, BLECharacteristic characteristic)
 {
-  BluetoothTerminal::getInstance().sendSeparator = separator;
-}
-
-void BluetoothTerminal::onConnectedStatic(BLEDevice device)
-{
-  BluetoothTerminal::getInstance().onConnected(device);
-}
-
-void BluetoothTerminal::onDisconnectedStatic(BLEDevice device)
-{
-  BluetoothTerminal::getInstance().onDisconnected(device);
-}
-
-void BluetoothTerminal::onWrittenStatic(BLEDevice device, BLECharacteristic characteristic)
-{
-  BluetoothTerminal::getInstance().onWritten(device, characteristic);
+  BluetoothTerminal::getInstance().handleWritten(device, characteristic);
 }
 
 /**
  * This method is called from the static method, so `this` references the
  * singleton instance.
  */
-void BluetoothTerminal::onConnected(BLEDevice device)
+void BluetoothTerminal::handleConnected(BLEDevice device)
 {
   this->deviceConnected = true;
 
   Serial.print("[BluetoothTerminal] Device (address \"");
   Serial.print(device.address());
   Serial.println("\") was connected.");
+
+  if (this->connectHandler)
+  {
+    this->connectHandler(device);
+  }
 }
 
 /**
  * This method is called from the static method, so `this` references the
  * singleton instance.
  */
-void BluetoothTerminal::onDisconnected(BLEDevice device)
+void BluetoothTerminal::handleDisconnected(BLEDevice device)
 {
   this->deviceConnected = false;
 
   Serial.print("[BluetoothTerminal] Device (address \"");
   Serial.print(device.address());
   Serial.println("\") was disconnected.");
+
+  if (this->disconnectHandler)
+  {
+    this->disconnectHandler(device);
+  }
 }
 
 /**
  * This method is called from the static method, so `this` references the
  * singleton instance.
  */
-void BluetoothTerminal::onWritten(BLEDevice device, BLECharacteristic characteristic)
+void BluetoothTerminal::handleWritten(BLEDevice device, BLECharacteristic characteristic)
 {
   const uint8_t *value = characteristic.value();
   int length = characteristic.valueLength();
@@ -167,6 +193,11 @@ void BluetoothTerminal::onWritten(BLEDevice device, BLECharacteristic characteri
       Serial.print("[BluetoothTerminal] Message received: \"");
       Serial.print(this->receiveBuffer);
       Serial.println("\".");
+
+      if (this->receiveHandler)
+      {
+        this->receiveHandler(this->receiveBuffer);
+      }
 
       this->receiveBufferIndex = 0;
 

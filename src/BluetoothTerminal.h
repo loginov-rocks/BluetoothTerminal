@@ -8,10 +8,17 @@ class BluetoothTerminal
 public:
   static BluetoothTerminal &getInstance();
 
+  using ConnectHandler = std::function<void(BLEDevice)>;
+  void onConnect(ConnectHandler);
+  using DisconnectHandler = std::function<void(BLEDevice)>;
+  void onDisconnect(DisconnectHandler);
+  using ReceiveHandler = std::function<void(const char *)>;
+  void onReceive(ReceiveHandler);
+
   void setReceiveSeparator(char);
   void setSendSeparator(char);
 
-  void setup();
+  void start();
   void loop();
 
   bool isConnected();
@@ -28,16 +35,20 @@ private:
   int receiveBufferIndex = 0;
   int receiveBufferSize = 128;
 
+  ConnectHandler connectHandler;
+  DisconnectHandler disconnectHandler;
+  ReceiveHandler receiveHandler;
+
   char receiveSeparator = '\n';
   char sendSeparator = '\n';
 
-  static void onConnectedStatic(BLEDevice);
-  static void onDisconnectedStatic(BLEDevice);
-  static void onWrittenStatic(BLEDevice, BLECharacteristic);
+  static void handleConnectedStatic(BLEDevice);
+  static void handleDisconnectedStatic(BLEDevice);
+  static void handleWrittenStatic(BLEDevice, BLECharacteristic);
 
-  void onConnected(BLEDevice);
-  void onDisconnected(BLEDevice);
-  void onWritten(BLEDevice, BLECharacteristic);
+  void handleConnected(BLEDevice);
+  void handleDisconnected(BLEDevice);
+  void handleWritten(BLEDevice, BLECharacteristic);
 };
 
 #endif

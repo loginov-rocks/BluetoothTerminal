@@ -16,6 +16,76 @@ Notes:
 * Planned enhancements: make device name, service and characteristic UUIDs, characteristic value size, and receive
   buffer size configurable.
 
+## API
+
+Current API (subject to change as work in progress):
+
+| Method                                                      | Description                                                             |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `void onConnect(std::function<void(BLEDevice)> handler)`    | Registers a callback for when a BLE device connects.                    |
+| `void onDisconnect(std::function<void(BLEDevice)> handler)` | Registers a callback for when a BLE device disconnects.                 |
+| `void onReceive(std::function<void(const char*)> handler)`  | Registers a callback for when a message is received.                    |
+| `void setReceiveSeparator(char separator)`                  | Sets the character used as the message separator for received messages. |
+| `void setSendSeparator(char separator)`                     | Sets the character used as the message separator for sent messages.     |
+| `void start()`                                              | Initializes and starts the BLE service and characteristic.              |
+| `void loop()`                                               | Polls BLE events; should be called in the `loop()` function.            |
+| `bool isConnected()`                                        | Checks if a BLE device is currently connected.                          |
+| `void send(const char *message)`                            | Sends a message to the connected BLE device.                            |
+
+## Testing
+
+Sample serial messaging:
+
+```
+[BluetoothTerminal] Starting BLE service... successful.
+[BluetoothTerminal] Setting up BLE service and characteristic...
+[BluetoothTerminal] BLE service and characteristic were set up.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") was connected.
+[BluetoothTerminal] Sending message: "Hello, world!"... sent.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 14 bytes into the characteristic.
+[BluetoothTerminal] Message received: "Hello, world!".
+```
+
+Message longer than the characteristic value size, but less than the receive buffer size (128 bytes):
+
+```
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+```
+
+```
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 4 bytes into the characteristic.
+[BluetoothTerminal] Message received: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.".
+```
+
+Message longer than the receive buffer size (128 bytes):
+
+```
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+```
+
+```
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Receive buffer overflow, data discarded: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut ".
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 12 bytes into the characteristic.
+[BluetoothTerminal] Message received: "enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.".
+```
+
 ## Reference
 
 * [ArduinoBLE library](https://github.com/arduino-libraries/ArduinoBLE)
