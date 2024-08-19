@@ -17,6 +17,7 @@ public:
 
   void setReceiveSeparator(char);
   void setSendSeparator(char);
+  void setSendDelay(int);
 
   void start();
   void loop();
@@ -41,6 +42,7 @@ private:
 
   char receiveSeparator = '\n';
   char sendSeparator = '\n';
+  int sendDelay = 0;
 
   static void handleConnectedStatic(BLEDevice);
   static void handleDisconnectedStatic(BLEDevice);

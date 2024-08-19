@@ -33,6 +33,11 @@ void BluetoothTerminal::setSendSeparator(char separator)
   BluetoothTerminal::getInstance().sendSeparator = separator;
 }
 
+void BluetoothTerminal::setSendDelay(int delay)
+{
+  BluetoothTerminal::getInstance().sendDelay = delay;
+}
+
 void BluetoothTerminal::start()
 {
   Serial.print("[BluetoothTerminal] Starting BLE service...");
@@ -89,29 +94,77 @@ void BluetoothTerminal::send(const char *message)
   }
 
   size_t length = strlen(message);
+  int lengthWithSeparator = length + 1;
 
-  // TODO: Implement a send buffer to accommodate messages longer than the
+  // Send the message if its length including the send separator is within the
   // characteristic value size.
-  if (length > instance.characteristicValueSize - 1)
+  if (lengthWithSeparator <= instance.characteristicValueSize)
   {
-    Serial.print(" failed, the message length should be less than ");
-    Serial.print(instance.characteristicValueSize);
-    Serial.println(" characters!");
+    // An additional byte accommodates the null terminator. A string longer
+    // than the characteristic value size can be created, however, no problems
+    // were observed during testing.
+    char messageWithSeparator[lengthWithSeparator + 1];
+    strcpy(messageWithSeparator, message);
+    messageWithSeparator[lengthWithSeparator - 1] = instance.sendSeparator;
+    messageWithSeparator[lengthWithSeparator] = '\0';
+
+    instance.bleCharacteristic.setValue(messageWithSeparator);
+
+    Serial.println(" sent.");
     return;
   }
 
-  // One byte for the send separator, another for the null terminator. Can
-  // create string longer than the characteristic value size by one byte
-  // accomodating the null terminator, however during testing did not find any
-  // problems.
-  char messageWithSeparator[length + 2];
-  strcpy(messageWithSeparator, message);
-  messageWithSeparator[length] = instance.sendSeparator;
-  messageWithSeparator[length + 1] = '\0';
+  // Otherwise, split the message into chunks and send them one by one with a
+  // small delay.
+  int numOfChunks = lengthWithSeparator / instance.characteristicValueSize;
+  if (lengthWithSeparator % instance.characteristicValueSize > 0)
+  {
+    numOfChunks += 1;
+  }
 
-  instance.bleCharacteristic.setValue(messageWithSeparator);
+  Serial.println();
+  Serial.print("[BluetoothTerminal]   Message length (");
+  Serial.print(length);
+  Serial.print(" characters) with the separator is longer than the characteristic value size (");
+  Serial.print(instance.characteristicValueSize);
+  Serial.print(" bytes), sending in ");
+  Serial.print(numOfChunks);
+  Serial.println(" chunks...");
 
-  Serial.println(" sent.");
+  for (int i = 0; i < numOfChunks; i++)
+  {
+    int offset = i * instance.characteristicValueSize;
+    int chunkLength = (i == numOfChunks - 1)
+                          ? lengthWithSeparator - offset
+                          : instance.characteristicValueSize;
+
+    // An additional byte accommodates the null terminator.
+    char chunk[chunkLength + 1];
+    strncpy(chunk, message + offset, chunkLength);
+    // Add a send separator if it's the last chunk.
+    if (i == numOfChunks - 1)
+    {
+      chunk[chunkLength - 1] = instance.sendSeparator;
+    }
+    chunk[chunkLength] = '\0';
+
+    Serial.print("[BluetoothTerminal]     Sending chunk ");
+    Serial.print(i + 1);
+    Serial.print(": \"");
+    Serial.print(chunk);
+    Serial.print("\"...");
+
+    instance.bleCharacteristic.setValue(chunk);
+
+    if (i < numOfChunks - 1 && instance.sendDelay > 0)
+    {
+      delay(instance.sendDelay);
+    }
+
+    Serial.println(" sent.");
+  }
+
+  Serial.println("[BluetoothTerminal]   All message chunks were sent.");
 }
 
 void BluetoothTerminal::handleConnectedStatic(BLEDevice device)
@@ -190,7 +243,7 @@ void BluetoothTerminal::handleWritten(BLEDevice device, BLECharacteristic charac
     {
       this->receiveBuffer[this->receiveBufferIndex] = '\0';
 
-      Serial.print("[BluetoothTerminal] Message received: \"");
+      Serial.print("[BluetoothTerminal]   Message received: \"");
       Serial.print(this->receiveBuffer);
       Serial.println("\".");
 
@@ -210,7 +263,7 @@ void BluetoothTerminal::handleWritten(BLEDevice device, BLECharacteristic charac
     {
       this->receiveBuffer[this->receiveBufferIndex] = '\0';
 
-      Serial.print("[BluetoothTerminal] Receive buffer overflow, data discarded: \"");
+      Serial.print("[BluetoothTerminal]   Receive buffer overflow, data discarded: \"");
       Serial.print(this->receiveBuffer);
       Serial.println("\".");
 
