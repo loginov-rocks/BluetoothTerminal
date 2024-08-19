@@ -1,5 +1,9 @@
 # BluetoothTerminal
 
+[![PlatformIO Registry](https://badges.registry.platformio.org/packages/loginov-rocks/library/BluetoothTerminal.svg)](https://registry.platformio.org/libraries/loginov-rocks/BluetoothTerminal)
+[![Arduino Lint](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/arduino-lint.yml/badge.svg)](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/arduino-lint.yml)
+[![PlatformIO Build](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/platformio-build.yml/badge.svg)](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/platformio-build.yml)
+
 This project aims to implement serial-like communication over BLE, which is available in ESP32-S3 SoC, to communicate
 with the [Web Bluetooth Terminal](https://github.com/loginov-rocks/Web-Bluetooth-Terminal) app.
 
