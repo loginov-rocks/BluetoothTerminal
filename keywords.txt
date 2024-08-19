@@ -1,0 +1,32 @@
+#######################################
+# Syntax Coloring Map For BluetoothTerminal
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+BluetoothTerminal	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+onConnect	KEYWORD2
+onDisconnect	KEYWORD2
+onReceive	KEYWORD2
+setReceiveSeparator	KEYWORD2
+setSendSeparator	KEYWORD2
+setSendDelay	KEYWORD2
+start	KEYWORD2
+loop	KEYWORD2
+isConnected	KEYWORD2
+send	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
