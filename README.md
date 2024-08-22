@@ -16,25 +16,251 @@ Notes:
 * Implements singleton under the hood, because I have not found a way to set ArduinoBLE event handlers without using
   static methods. However, the public class interface does not expose this detail and is used as a regular class. This
   should not have any problems if using a single object.
-* Planned enhancements: make device name, service and characteristic UUIDs, characteristic value size, and receive
-  buffer size configurable.
+* Planned enhancements: service and characteristic UUIDs, characteristic value size, and receive buffer size
+  configurable.
 
 ## API
 
-Current API (subject to change as work in progress):
+<!-- no toc -->
+* [BluetoothTerminal](#bluetoothterminal-1)
+  * [void onConnect(std::function<void(BLEDevice)> handler)](#void-onconnectstdfunctionvoidbledevice-handler)
+  * [void onDisconnect(std::function<void(BLEDevice)> handler)](#void-ondisconnectstdfunctionvoidbledevice-handler)
+  * [void onReceive(std::function<void(const char*)> handler)](#void-onreceivestdfunctionvoidconst-char-handler)
+  * [void setName(const char *name)](#void-setnameconst-char-name)
+  * [void setReceiveSeparator(char separator)](#void-setreceiveseparatorchar-separator)
+  * [void setSendSeparator(char separator)](#void-setsendseparatorchar-separator)
+  * [void setSendDelay(int delay)](#void-setsenddelayint-delay)
+  * [void start()](#void-start)
+  * [void loop()](#void-loop)
+  * [bool isConnected()](#bool-isconnected)
+  * [void send(const char *message)](#void-sendconst-char-message)
 
-| Method                                                      | Description                                                               |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `void onConnect(std::function<void(BLEDevice)> handler)`    | Registers a callback for when a BLE device connects.                      |
-| `void onDisconnect(std::function<void(BLEDevice)> handler)` | Registers a callback for when a BLE device disconnects.                   |
-| `void onReceive(std::function<void(const char*)> handler)`  | Registers a callback for when a message is received.                      |
-| `void setReceiveSeparator(char separator)`                  | Sets the character used as the message separator for received messages.   |
-| `void setSendSeparator(char separator)`                     | Sets the character used as the message separator for sent messages.       |
-| `void setSendDelay(int delay)`                              | Sets the delay in milliseconds used in between sending message in chunks. |
-| `void start()`                                              | Initializes and starts the BLE service and characteristic.                |
-| `void loop()`                                               | Polls BLE events; should be called in the `loop()` function.              |
-| `bool isConnected()`                                        | Checks if a BLE device is currently connected.                            |
-| `void send(const char *message)`                            | Sends a message to the connected BLE device.                              |
+### `BluetoothTerminal`
+
+Bluetooth Terminal class.
+
+**Kind**: global class
+
+---
+
+#### `void onConnect(std::function<void(BLEDevice)> handler)`
+
+Registers a callback for when a BLE device connects.
+
+Example:
+
+```cpp
+void handleConnect(BLEDevice device)
+{
+  Serial.println("Device connected");
+}
+
+void setup()
+{
+  // ...
+  bluetoothTerminal.onConnect(handleConnect);
+  // ...
+}
+```
+
+---
+
+#### `void onDisconnect(std::function<void(BLEDevice)> handler)`
+
+Registers a callback for when a BLE device disconnects.
+
+Example:
+
+```cpp
+void handleDisconnect(BLEDevice device)
+{
+  Serial.println("Device disconnected");
+}
+
+void setup()
+{
+  // ...
+  bluetoothTerminal.onDisconnect(handleDisconnect);
+  // ...
+}
+```
+
+---
+
+#### `void onReceive(std::function<void(const char*)> handler)`
+
+Registers a callback for when a message is received.
+
+Example:
+
+```cpp
+void handleReceive(const char *message)
+{
+  Serial.print("Message received: ");
+  Serial.println(message);
+}
+
+void setup()
+{
+  // ...
+  bluetoothTerminal.onReceive(handleReceive);
+  // ...
+}
+```
+
+---
+
+#### `void setName(const char *name)`
+
+Set device name. Optional, no name is set by default. Should be called before `bluetoothTerminal.start()`, does not
+have impact if called after.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.setName("BluetoothTerminal");
+  // ...
+}
+```
+
+---
+
+#### `void setReceiveSeparator(char separator)`
+
+Set character serving as a separator when receiving messages.
+
+Optional, `\n` by default. Can be changed in runtime, for example during `loop()` execution.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.setReceiveSeparator('\n');
+  // ...
+}
+```
+
+---
+
+#### `void setSendSeparator(char separator)`
+
+Set character serving as a separator when sending messages.
+
+Optional, `\n` by default. Can be changed in runtime, for example during `loop()` execution.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.setSendSeparator('\n');
+  // ...
+}
+```
+
+---
+
+#### `void setSendDelay(int delay)`
+
+Set delay in milliseconds to wait in between sending message in chunks, when the message length including the send
+separator is longer than the characteristic value size. Use when some chunks of the message are not received by the
+central device (connecting to the BLE module).
+
+Optional, no delay is set by default. Can be changed in runtime, for example during `loop()` execution.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.setSendDelay(100);
+  // ...
+}
+```
+
+---
+
+#### `void start()`
+
+Initializes and starts the BLE service and characteristic.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.start();
+  // ...
+}
+```
+
+---
+
+#### `void loop()`
+
+Polls BLE events; should be called in the `loop()` function.
+
+Example:
+
+```cpp
+void loop()
+{
+  // ...
+  bluetoothTerminal.loop();
+  // ...
+}
+```
+
+---
+
+#### `bool isConnected()`
+
+Checks if a BLE device is currently connected.
+
+Example:
+
+```cpp
+void loop()
+{
+  // ...
+  if (bluetoothTerminal.isConnected())
+  {
+    Serial.println("Device is connected!");
+  }
+  else
+  {
+    Serial.println("Device is not connected!");
+  }
+  // ...
+}
+```
+
+---
+
+#### `void send(const char *message)`
+
+Sends a message to the connected BLE device.
+
+Example:
+
+```cpp
+void loop()
+{
+  // ...
+  bluetoothTerminal.send("Hello, world!");
+  // ...
+}
+```
+
+---
 
 ## Testing
 

@@ -6,6 +6,8 @@
 class BluetoothTerminal
 {
 public:
+  ~BluetoothTerminal();
+
   static BluetoothTerminal &getInstance();
 
   using ConnectHandler = std::function<void(BLEDevice)>;
@@ -15,6 +17,7 @@ public:
   using ReceiveHandler = std::function<void(const char *)>;
   void onReceive(ReceiveHandler);
 
+  void setName(const char *);
   void setReceiveSeparator(char);
   void setSendSeparator(char);
   void setSendDelay(int);
@@ -40,6 +43,7 @@ private:
   DisconnectHandler disconnectHandler;
   ReceiveHandler receiveHandler;
 
+  char *name = nullptr;
   char receiveSeparator = '\n';
   char sendSeparator = '\n';
   int sendDelay = 0;

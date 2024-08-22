@@ -1,5 +1,10 @@
 #include <BluetoothTerminal.h>
 
+BluetoothTerminal::~BluetoothTerminal()
+{
+  delete[] name;
+}
+
 BluetoothTerminal &BluetoothTerminal::getInstance()
 {
   // This instance will be created once and reused.
@@ -21,6 +26,22 @@ void BluetoothTerminal::onDisconnect(DisconnectHandler handler)
 void BluetoothTerminal::onReceive(ReceiveHandler handler)
 {
   BluetoothTerminal::getInstance().receiveHandler = handler;
+}
+
+void BluetoothTerminal::setName(const char *name)
+{
+  if (name != nullptr)
+  {
+    BluetoothTerminal instance = BluetoothTerminal::getInstance();
+    if (instance.name != nullptr)
+    {
+      delete[] instance.name;
+    }
+
+    size_t length = strlen(name) + 1;
+    instance.name = new char[length];
+    strncpy(instance.name, name, length);
+  }
 }
 
 void BluetoothTerminal::setReceiveSeparator(char separator)
@@ -50,14 +71,16 @@ void BluetoothTerminal::start()
 
   Serial.println("[BluetoothTerminal] Setting up BLE service and characteristic...");
 
-  // TODO: Make configurable.
-  BLE.setLocalName("ESP32");
-  BLE.setDeviceName("ESP32");
+  BluetoothTerminal instance = BluetoothTerminal::getInstance();
+
+  if (instance.name != nullptr)
+  {
+    BLE.setLocalName(instance.name);
+    BLE.setDeviceName(instance.name);
+  }
 
   BLE.setEventHandler(BLEConnected, BluetoothTerminal::handleConnectedStatic);
   BLE.setEventHandler(BLEDisconnected, BluetoothTerminal::handleDisconnectedStatic);
-
-  BluetoothTerminal instance = BluetoothTerminal::getInstance();
 
   instance.bleService.addCharacteristic(instance.bleCharacteristic);
   instance.bleCharacteristic.setEventHandler(BLEWritten, BluetoothTerminal::handleWrittenStatic);

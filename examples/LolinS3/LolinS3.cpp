@@ -30,6 +30,7 @@ void setup()
   bluetoothTerminal.onConnect(handleConnect);       // optional
   bluetoothTerminal.onDisconnect(handleDisconnect); // optional
   bluetoothTerminal.onReceive(handleReceive);       // optional
+  bluetoothTerminal.setName("BluetoothTerminal");   // optional
   // bluetoothTerminal.setReceiveSeparator('\n');
   // bluetoothTerminal.setSendSeparator('\n');
   // bluetoothTerminal.setSendDelay(100);
