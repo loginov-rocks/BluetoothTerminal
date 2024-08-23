@@ -292,6 +292,7 @@ The library logs events into `Serial`, for example:
 [BluetoothTerminal] The disconnect handler is set.
 [BluetoothTerminal] The receive handler is set.
 [BluetoothTerminal] The name is set to "BluetoothTerminal".
+[BluetoothTerminal] The receive buffer size is set to 1024 bytes.
 [BluetoothTerminal] The receive separator is set to "
 ".
 [BluetoothTerminal] The send separator is set to "
