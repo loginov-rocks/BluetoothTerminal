@@ -18,6 +18,7 @@ public:
   void onReceive(ReceiveHandler);
 
   void setName(const char *);
+  void setReceiveBufferSize(size_t size);
   void setReceiveSeparator(char);
   void setSendSeparator(char);
   void setSendDelay(int);
@@ -35,15 +36,16 @@ private:
 
   bool deviceConnected = false;
 
-  char receiveBuffer[128];
+  char *receiveBuffer = nullptr;
   int receiveBufferIndex = 0;
-  int receiveBufferSize = 128;
+  bool receiveBufferInitialized = false;
 
   ConnectHandler connectHandler;
   DisconnectHandler disconnectHandler;
   ReceiveHandler receiveHandler;
 
   char *name = nullptr;
+  size_t receiveBufferSize = 256;
   char receiveSeparator = '\n';
   char sendSeparator = '\n';
   int sendDelay = 0;

@@ -2,7 +2,15 @@
 
 BluetoothTerminal::~BluetoothTerminal()
 {
-  delete[] this->name;
+  if (this->receiveBuffer != nullptr)
+  {
+    delete[] this->receiveBuffer;
+  }
+
+  if (this->name != nullptr)
+  {
+    delete[] this->name;
+  }
 }
 
 BluetoothTerminal &BluetoothTerminal::getInstance()
@@ -52,6 +60,29 @@ void BluetoothTerminal::setName(const char *name)
     Serial.print("[BluetoothTerminal] The name is set to \"");
     Serial.print(instance.name);
     Serial.println("\".");
+  }
+}
+
+void BluetoothTerminal::setReceiveBufferSize(size_t size)
+{
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
+  // Set the new receive buffer size only if it's different from the current
+  // one.
+  if (size != instance.receiveBufferSize)
+  {
+    // Delete the current receive buffer to reallocate memory after.
+    if (instance.receiveBuffer != nullptr)
+    {
+      delete[] instance.receiveBuffer;
+    }
+
+    instance.receiveBufferInitialized = false;
+    instance.receiveBufferSize = size;
+
+    Serial.print("[BluetoothTerminal] The receive buffer size is set to ");
+    Serial.print(instance.receiveBufferSize);
+    Serial.println(" bytes.");
   }
 }
 
@@ -278,6 +309,14 @@ void BluetoothTerminal::handleWritten(BLEDevice device, BLECharacteristic charac
   Serial.print("\") has written ");
   Serial.print(length);
   Serial.println(" bytes into the characteristic.");
+
+  // Dynamically allocate memory for the receive buffer, if it's not
+  // initialized yet.
+  if (!this->receiveBufferInitialized)
+  {
+    this->receiveBuffer = new char[this->receiveBufferSize];
+    this->receiveBufferInitialized = true;
+  }
 
   for (int i = 0; i < length; i++)
   {

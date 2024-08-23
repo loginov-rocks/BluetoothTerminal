@@ -11,13 +11,12 @@ Notes:
 
 * Supports sending messages longer than the characteristic value size (currently hardcoded to 20 bytes) by splitting
   the message into chunks and sending them with optional delay.
-* Capable of receiving messages up to 128 bytes, not including the 128th character since it's needed for the null
+* Capable of receiving messages up to 256 bytes, not including the 256th character since it's needed for the null
   terminator. When the incoming message does not fit the receive buffer the earlier data will be discarded.
 * Implements singleton under the hood, because I have not found a way to set ArduinoBLE event handlers without using
   static methods. However, the public class interface does not expose this detail and is used as a regular class. This
   should not have any problems if using a single object.
-* Planned enhancements: service and characteristic UUIDs, characteristic value size, and receive buffer size
-  configurable.
+* Planned enhancements: service and characteristic UUIDs, characteristic value size configurable.
 
 ## API
 
@@ -27,6 +26,7 @@ Notes:
   * [void onDisconnect(std::function<void(BLEDevice)> handler)](#void-ondisconnectstdfunctionvoidbledevice-handler)
   * [void onReceive(std::function<void(const char*)> handler)](#void-onreceivestdfunctionvoidconst-char-handler)
   * [void setName(const char *name)](#void-setnameconst-char-name)
+  * [void setReceiveBufferSize(size_t size)](#void-setreceivebuffersizesize_t-size)
   * [void setReceiveSeparator(char separator)](#void-setreceiveseparatorchar-separator)
   * [void setSendSeparator(char separator)](#void-setsendseparatorchar-separator)
   * [void setSendDelay(int delay)](#void-setsenddelayint-delay)
@@ -123,6 +123,26 @@ void setup()
 {
   // ...
   bluetoothTerminal.setName("BluetoothTerminal");
+  // ...
+}
+```
+
+---
+
+#### `void setReceiveBufferSize(size_t size)`
+
+Set receive buffer size in bytes. Use to accommodate longer messages.
+
+Optional, `256` bytes by default. Can be changed in runtime, for example during `loop()` execution. However, when
+changed it discards the current receive buffer data.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.setReceiveBufferSize(1024);
   // ...
 }
 ```
