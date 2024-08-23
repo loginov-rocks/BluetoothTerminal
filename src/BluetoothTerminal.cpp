@@ -2,7 +2,7 @@
 
 BluetoothTerminal::~BluetoothTerminal()
 {
-  delete[] name;
+  delete[] this->name;
 }
 
 BluetoothTerminal &BluetoothTerminal::getInstance()
@@ -16,23 +16,30 @@ BluetoothTerminal &BluetoothTerminal::getInstance()
 void BluetoothTerminal::onConnect(ConnectHandler handler)
 {
   BluetoothTerminal::getInstance().connectHandler = handler;
+
+  Serial.println("[BluetoothTerminal] The connect handler is set.");
 }
 
 void BluetoothTerminal::onDisconnect(DisconnectHandler handler)
 {
   BluetoothTerminal::getInstance().disconnectHandler = handler;
+
+  Serial.println("[BluetoothTerminal] The disconnect handler is set.");
 }
 
 void BluetoothTerminal::onReceive(ReceiveHandler handler)
 {
   BluetoothTerminal::getInstance().receiveHandler = handler;
+
+  Serial.println("[BluetoothTerminal] The receive handler is set.");
 }
 
 void BluetoothTerminal::setName(const char *name)
 {
   if (name != nullptr)
   {
-    BluetoothTerminal instance = BluetoothTerminal::getInstance();
+    BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
     if (instance.name != nullptr)
     {
       delete[] instance.name;
@@ -41,22 +48,38 @@ void BluetoothTerminal::setName(const char *name)
     size_t length = strlen(name) + 1;
     instance.name = new char[length];
     strncpy(instance.name, name, length);
+
+    Serial.print("[BluetoothTerminal] The name is set to \"");
+    Serial.print(instance.name);
+    Serial.println("\".");
   }
 }
 
 void BluetoothTerminal::setReceiveSeparator(char separator)
 {
   BluetoothTerminal::getInstance().receiveSeparator = separator;
+
+  Serial.print("[BluetoothTerminal] The receive separator is set to \"");
+  Serial.print(separator);
+  Serial.println("\".");
 }
 
 void BluetoothTerminal::setSendSeparator(char separator)
 {
   BluetoothTerminal::getInstance().sendSeparator = separator;
+
+  Serial.print("[BluetoothTerminal] The send separator is set to \"");
+  Serial.print(separator);
+  Serial.println("\".");
 }
 
 void BluetoothTerminal::setSendDelay(int delay)
 {
   BluetoothTerminal::getInstance().sendDelay = delay;
+
+  Serial.print("[BluetoothTerminal] The send delay is set to ");
+  Serial.print(delay);
+  Serial.println(" milliseconds.");
 }
 
 void BluetoothTerminal::start()
@@ -71,7 +94,7 @@ void BluetoothTerminal::start()
 
   Serial.println("[BluetoothTerminal] Setting up BLE service and characteristic...");
 
-  BluetoothTerminal instance = BluetoothTerminal::getInstance();
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
 
   if (instance.name != nullptr)
   {
@@ -108,7 +131,7 @@ void BluetoothTerminal::send(const char *message)
   Serial.print(message);
   Serial.print("\"...");
 
-  BluetoothTerminal instance = BluetoothTerminal::getInstance();
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
 
   if (!instance.isConnected())
   {
