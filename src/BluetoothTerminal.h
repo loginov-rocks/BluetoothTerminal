@@ -45,7 +45,7 @@ private:
   ReceiveHandler receiveHandler;
 
   char *name = nullptr;
-  size_t receiveBufferSize = 256;
+  size_t receiveBufferSize = 128;
   char receiveSeparator = '\n';
   char sendSeparator = '\n';
   int sendDelay = 0;

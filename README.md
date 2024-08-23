@@ -11,8 +11,9 @@ Notes:
 
 * Supports sending messages longer than the characteristic value size (currently hardcoded to 20 bytes) by splitting
   the message into chunks and sending them with optional delay.
-* Capable of receiving messages up to 256 bytes, not including the 256th character since it's needed for the null
-  terminator. When the incoming message does not fit the receive buffer the earlier data will be discarded.
+* Capable of receiving messages up to 128 bytes (configurable), not including the 128th character since it's needed
+  for the null terminator. When the incoming message does not fit the receive buffer the earlier data will be
+  discarded.
 * Implements singleton under the hood, because I have not found a way to set ArduinoBLE event handlers without using
   static methods. However, the public class interface does not expose this detail and is used as a regular class. This
   should not have any problems if using a single object.
@@ -133,7 +134,7 @@ void setup()
 
 Set receive buffer size in bytes. Use to accommodate longer messages.
 
-Optional, `256` bytes by default. Can be changed in runtime, for example during `loop()` execution. However, when
+Optional, `128` bytes by default. Can be changed in runtime, for example during `loop()` execution. However, when
 changed it discards the current receive buffer data.
 
 Example:
@@ -142,7 +143,7 @@ Example:
 void setup()
 {
   // ...
-  bluetoothTerminal.setReceiveBufferSize(1024);
+  bluetoothTerminal.setReceiveBufferSize(256);
   // ...
 }
 ```
@@ -307,7 +308,8 @@ The library logs events into `Serial`, for example:
 [BluetoothTerminal]   Message received: "Hello, world!".
 ```
 
-With message longer than the characteristic value size, but less than the receive buffer size (128 bytes):
+With message longer than the characteristic value size (20 bytes by default), but less than the receive buffer size
+(128 bytes by default):
 
 ```
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -324,7 +326,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 [BluetoothTerminal]   Message received: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.".
 ```
 
-With message longer than the receive buffer size (128 bytes):
+With message longer than the receive buffer size (128 bytes by default):
 
 ```
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.

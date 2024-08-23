@@ -171,7 +171,7 @@ void BluetoothTerminal::send(const char *message)
   }
 
   size_t length = strlen(message);
-  int lengthWithSeparator = length + 1;
+  size_t lengthWithSeparator = length + 1;
 
   // Send the message if its length including the send separator is within the
   // characteristic value size.
@@ -211,9 +211,9 @@ void BluetoothTerminal::send(const char *message)
   for (int i = 0; i < numOfChunks; i++)
   {
     int offset = i * instance.characteristicValueSize;
-    int chunkLength = (i == numOfChunks - 1)
-                          ? lengthWithSeparator - offset
-                          : instance.characteristicValueSize;
+    size_t chunkLength = (i == numOfChunks - 1)
+                             ? lengthWithSeparator - offset
+                             : instance.characteristicValueSize;
 
     // An additional byte accommodates the null terminator.
     char chunk[chunkLength + 1];
