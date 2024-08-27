@@ -17,6 +17,10 @@ public:
   using ReceiveHandler = std::function<void(const char *)>;
   void onReceive(ReceiveHandler);
 
+  void setServiceUuid(const char *);
+  void setCharacteristicUuid(const char *);
+  void setCharacteristicValueSize(int);
+
   void setName(const char *);
   void setReceiveBufferSize(size_t size);
   void setReceiveSeparator(char);
@@ -30,9 +34,8 @@ public:
   void send(const char *);
 
 private:
-  BLEService bleService = BLEService("ffe0");
-  BLECharacteristic bleCharacteristic = BLECharacteristic("ffe1", BLERead | BLEWriteWithoutResponse | BLENotify, 20);
-  int characteristicValueSize = 20;
+  BLEService *bleService = nullptr;
+  BLECharacteristic *bleCharacteristic = nullptr;
 
   bool deviceConnected = false;
 
@@ -43,6 +46,10 @@ private:
   ConnectHandler connectHandler;
   DisconnectHandler disconnectHandler;
   ReceiveHandler receiveHandler;
+
+  char *serviceUuid = nullptr;        // `ffe0` used by default.
+  char *characteristicUuid = nullptr; // `ffe1` used by default.
+  int characteristicValueSize = 20;
 
   char *name = nullptr;
   size_t receiveBufferSize = 128;

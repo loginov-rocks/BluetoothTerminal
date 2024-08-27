@@ -30,11 +30,17 @@ void setup()
   bluetoothTerminal.onConnect(handleConnect);       // optional
   bluetoothTerminal.onDisconnect(handleDisconnect); // optional
   bluetoothTerminal.onReceive(handleReceive);       // optional
-  bluetoothTerminal.setName("BluetoothTerminal");   // optional
+
+  // bluetoothTerminal.setServiceUuid("ffe0");
+  // bluetoothTerminal.setCharacteristicUuid("ffe1");
+  // bluetoothTerminal.setCharacteristicValueSize(20);
+
+  bluetoothTerminal.setName("BluetoothTerminal"); // optional
   // bluetoothTerminal.setReceiveBufferSize(256);
   // bluetoothTerminal.setReceiveSeparator('\n');
   // bluetoothTerminal.setSendSeparator('\n');
   // bluetoothTerminal.setSendDelay(100);
+
   bluetoothTerminal.start();
 
   Serial.println("Bluetooth Terminal setup was successful.");
@@ -44,7 +50,7 @@ void loop()
 {
   unsigned long currentMillis = millis();
 
-  if (currentMillis > lastMillis + 10000)
+  if (currentMillis > lastMillis + 5000)
   {
     lastMillis = currentMillis;
 

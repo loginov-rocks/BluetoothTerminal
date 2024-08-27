@@ -17,7 +17,6 @@ Notes:
 * Implements singleton under the hood, because I have not found a way to set ArduinoBLE event handlers without using
   static methods. However, the public class interface does not expose this detail and is used as a regular class. This
   should not have any problems if using a single object.
-* Planned enhancements: service and characteristic UUIDs, characteristic value size configurable.
 
 ## API
 
@@ -26,6 +25,9 @@ Notes:
   * [void onConnect(std::function<void(BLEDevice)> handler)](#void-onconnectstdfunctionvoidbledevice-handler)
   * [void onDisconnect(std::function<void(BLEDevice)> handler)](#void-ondisconnectstdfunctionvoidbledevice-handler)
   * [void onReceive(std::function<void(const char*)> handler)](#void-onreceivestdfunctionvoidconst-char-handler)
+  * [void setServiceUuid(const char *uuid)](#void-setserviceuuidconst-char-uuid)
+  * [void setCharacteristicUuid(const char *uuid)](#void-setcharacteristicuuidconst-char-uuid)
+  * [void setCharacteristicValueSize(int size)](#void-setcharacteristicvaluesizeint-size)
   * [void setName(const char *name)](#void-setnameconst-char-name)
   * [void setReceiveBufferSize(size_t size)](#void-setreceivebuffersizesize_t-size)
   * [void setReceiveSeparator(char separator)](#void-setreceiveseparatorchar-separator)
@@ -111,11 +113,65 @@ void setup()
 
 ---
 
+#### `void setServiceUuid(const char *uuid)`
+
+Set service UUID to be used. Optional, `ffe0` used by default. Should be called before `bluetoothTerminal.start()`,
+does not have impact if called after. Can be set once only, will log error otherwise.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.setServiceUuid("ffe0");
+  // ...
+}
+```
+
+---
+
+#### `void setCharacteristicUuid(const char *uuid)`
+
+Set characteristic UUID to be used. Optional, `ffe1` used by default. Should be called before
+`bluetoothTerminal.start()`, does not have impact if called after. Can be set once only, will log error otherwise.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.setCharacteristicUuid("ffe1");
+  // ...
+}
+```
+
+---
+
+#### `void setCharacteristicValueSize(int size)`
+
+Set characteristic value size to be used. Optional, `20` bytes used by default. Should be called before
+`bluetoothTerminal.start()`, does not have impact if called after.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.setCharacteristicValueSize(20);
+  // ...
+}
+```
+
+---
+
 #### `void setName(const char *name)`
 
 Set device name. Optional, by default is `Arduino` and shown only when paired according to the underlying library
 [documentation](https://www.arduino.cc/reference/en/libraries/arduinoble/ble.setdevicename/). Should be called before
-`bluetoothTerminal.start()`, does not have impact if called after.
+`bluetoothTerminal.start()`, does not have impact if called after. Can be set once only, will log error otherwise.
 
 Example:
 
@@ -292,8 +348,11 @@ The library logs events into `Serial`, for example:
 [BluetoothTerminal] The connect handler is set.
 [BluetoothTerminal] The disconnect handler is set.
 [BluetoothTerminal] The receive handler is set.
+[BluetoothTerminal] The service UUID is set to "ffe0".
+[BluetoothTerminal] The characteristic UUID is set to "ffe1".
+[BluetoothTerminal] The characteristic value size is set to 20 bytes.
 [BluetoothTerminal] The name is set to "BluetoothTerminal".
-[BluetoothTerminal] The receive buffer size is set to 1024 bytes.
+[BluetoothTerminal] The receive buffer size is set to 256 bytes.
 [BluetoothTerminal] The receive separator is set to "
 ".
 [BluetoothTerminal] The send separator is set to "
@@ -306,6 +365,7 @@ The library logs events into `Serial`, for example:
 [BluetoothTerminal] Sending message: "Hello, world!"... sent.
 [BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 14 bytes into the characteristic.
 [BluetoothTerminal]   Message received: "Hello, world!".
+[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") was disconnected.
 ```
 
 With message longer than the characteristic value size (20 bytes by default), but less than the receive buffer size

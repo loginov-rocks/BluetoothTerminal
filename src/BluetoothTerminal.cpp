@@ -2,9 +2,29 @@
 
 BluetoothTerminal::~BluetoothTerminal()
 {
+  if (this->bleService != nullptr)
+  {
+    delete this->bleService;
+  }
+
+  if (this->bleCharacteristic != nullptr)
+  {
+    delete this->bleCharacteristic;
+  }
+
   if (this->receiveBuffer != nullptr)
   {
     delete[] this->receiveBuffer;
+  }
+
+  if (this->serviceUuid != nullptr)
+  {
+    delete[] this->serviceUuid;
+  }
+
+  if (this->characteristicUuid != nullptr)
+  {
+    delete[] this->characteristicUuid;
   }
 
   if (this->name != nullptr)
@@ -42,6 +62,63 @@ void BluetoothTerminal::onReceive(ReceiveHandler handler)
   Serial.println("[BluetoothTerminal] The receive handler is set.");
 }
 
+void BluetoothTerminal::setServiceUuid(const char *uuid)
+{
+  if (uuid != nullptr)
+  {
+    BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
+    if (instance.serviceUuid != nullptr)
+    {
+      Serial.print("[BluetoothTerminal] Setting the service UUID failed, it was already set to \"");
+      Serial.print(instance.serviceUuid);
+      Serial.println("\"!");
+      return;
+    }
+
+    size_t length = strlen(uuid) + 1;
+    instance.serviceUuid = new char[length];
+    strncpy(instance.serviceUuid, uuid, length);
+
+    Serial.print("[BluetoothTerminal] The service UUID is set to \"");
+    Serial.print(instance.serviceUuid);
+    Serial.println("\".");
+  }
+}
+
+void BluetoothTerminal::setCharacteristicUuid(const char *uuid)
+{
+  if (uuid != nullptr)
+  {
+    BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
+    if (instance.characteristicUuid != nullptr)
+    {
+      Serial.print("[BluetoothTerminal] Setting the characteristic UUID failed, it was already set to \"");
+      Serial.print(instance.characteristicUuid);
+      Serial.println("\"!");
+      return;
+    }
+
+    size_t length = strlen(uuid) + 1;
+    instance.characteristicUuid = new char[length];
+    strncpy(instance.characteristicUuid, uuid, length);
+
+    Serial.print("[BluetoothTerminal] The characteristic UUID is set to \"");
+    Serial.print(instance.characteristicUuid);
+    Serial.println("\".");
+  }
+}
+
+void BluetoothTerminal::setCharacteristicValueSize(int size)
+{
+  BluetoothTerminal::getInstance().characteristicValueSize = size;
+
+  Serial.print("[BluetoothTerminal] The characteristic value size is set to ");
+  Serial.print(size);
+  Serial.println(" bytes.");
+}
+
 void BluetoothTerminal::setName(const char *name)
 {
   if (name != nullptr)
@@ -50,7 +127,10 @@ void BluetoothTerminal::setName(const char *name)
 
     if (instance.name != nullptr)
     {
-      delete[] instance.name;
+      Serial.print("[BluetoothTerminal] Setting the name failed, it was already set to \"");
+      Serial.print(instance.name);
+      Serial.println("\"!");
+      return;
     }
 
     size_t length = strlen(name) + 1;
@@ -136,11 +216,27 @@ void BluetoothTerminal::start()
   BLE.setEventHandler(BLEConnected, BluetoothTerminal::handleConnectedStatic);
   BLE.setEventHandler(BLEDisconnected, BluetoothTerminal::handleDisconnectedStatic);
 
-  instance.bleService.addCharacteristic(instance.bleCharacteristic);
-  instance.bleCharacteristic.setEventHandler(BLEWritten, BluetoothTerminal::handleWrittenStatic);
-  BLE.addService(instance.bleService);
+  if (instance.bleService != nullptr)
+  {
+    delete instance.bleService;
+  }
 
-  BLE.setAdvertisedService(instance.bleService);
+  if (instance.bleCharacteristic != nullptr)
+  {
+    delete instance.bleCharacteristic;
+  }
+
+  instance.bleService = new BLEService(instance.serviceUuid == nullptr ? "ffe0" : instance.serviceUuid);
+  instance.bleCharacteristic = new BLECharacteristic(
+      instance.characteristicUuid == nullptr ? "ffe1" : instance.characteristicUuid,
+      BLERead | BLEWriteWithoutResponse | BLENotify,
+      instance.characteristicValueSize);
+
+  instance.bleService->addCharacteristic(*instance.bleCharacteristic);
+  instance.bleCharacteristic->setEventHandler(BLEWritten, BluetoothTerminal::handleWrittenStatic);
+  BLE.addService(*instance.bleService);
+
+  BLE.setAdvertisedService(*instance.bleService);
   BLE.advertise();
 
   Serial.println("[BluetoothTerminal] BLE service and characteristic were set up.");
@@ -185,7 +281,7 @@ void BluetoothTerminal::send(const char *message)
     messageWithSeparator[lengthWithSeparator - 1] = instance.sendSeparator;
     messageWithSeparator[lengthWithSeparator] = '\0';
 
-    instance.bleCharacteristic.setValue(messageWithSeparator);
+    instance.bleCharacteristic->setValue(messageWithSeparator);
 
     Serial.println(" sent.");
     return;
@@ -231,7 +327,7 @@ void BluetoothTerminal::send(const char *message)
     Serial.print(chunk);
     Serial.print("\"...");
 
-    instance.bleCharacteristic.setValue(chunk);
+    instance.bleCharacteristic->setValue(chunk);
 
     if (i < numOfChunks - 1 && instance.sendDelay > 0)
     {
