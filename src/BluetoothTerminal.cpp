@@ -33,14 +33,6 @@ BluetoothTerminal::~BluetoothTerminal()
   }
 }
 
-BluetoothTerminal &BluetoothTerminal::getInstance()
-{
-  // This instance will be created once and reused.
-  static BluetoothTerminal instance;
-
-  return instance;
-}
-
 void BluetoothTerminal::onConnect(ConnectHandler handler)
 {
   BluetoothTerminal::getInstance().connectHandler = handler;
@@ -338,6 +330,14 @@ void BluetoothTerminal::send(const char *message)
   }
 
   Serial.println("[BluetoothTerminal]   All message chunks were sent.");
+}
+
+BluetoothTerminal &BluetoothTerminal::getInstance()
+{
+  // This instance will be created once and reused.
+  static BluetoothTerminal instance;
+
+  return instance;
 }
 
 void BluetoothTerminal::handleConnectedStatic(BLEDevice device)

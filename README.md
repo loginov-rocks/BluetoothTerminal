@@ -38,17 +38,35 @@ Notes:
   * [bool isConnected()](#bool-isconnected)
   * [void send(const char *message)](#void-sendconst-char-message)
 
+---
+
 ### `BluetoothTerminal`
 
-Bluetooth Terminal class.
+The `BluetoothTerminal` class is a core component of the library that provides an interface for BLE-based serial
+communication, handles the connection with the central device, and provides methods to configure BLE and send and
+receive data.
 
-**Kind**: global class
+Example:
+
+```cpp
+BluetoothTerminal bluetoothTerminal;
+
+void setup()
+{
+  // ...
+}
+
+void loop()
+{
+  // ...
+}
+```
 
 ---
 
 #### `void onConnect(std::function<void(BLEDevice)> handler)`
 
-Registers a callback for when a BLE device connects.
+Sets a callback function to be invoked when a device connects to the BLE module.
 
 Example:
 
@@ -70,7 +88,7 @@ void setup()
 
 #### `void onDisconnect(std::function<void(BLEDevice)> handler)`
 
-Registers a callback for when a BLE device disconnects.
+Sets a callback function to be invoked when a device disconnects from the BLE module.
 
 Example:
 
@@ -92,7 +110,8 @@ void setup()
 
 #### `void onReceive(std::function<void(const char*)> handler)`
 
-Registers a callback for when a message is received.
+Sets a callback function to be invoked when a message ending with the receive separator (`\n` by default) is received
+from a connected device.
 
 Example:
 
@@ -115,8 +134,9 @@ void setup()
 
 #### `void setServiceUuid(const char *uuid)`
 
-Set service UUID to be used. Optional, `ffe0` used by default. Should be called before `bluetoothTerminal.start()`,
-does not have impact if called after. Can be set once only, will log error otherwise.
+Sets the BLE service UUID. Optional; if not set, the default UUID `ffe0` will be used. It should be called before
+`bluetoothTerminal.start()`. If used after, the method will have no effect. The service UUID can only be set once, if
+the method is called again, it will log an error, and the existing service UUID will remain unchanged.
 
 Example:
 
@@ -133,8 +153,10 @@ void setup()
 
 #### `void setCharacteristicUuid(const char *uuid)`
 
-Set characteristic UUID to be used. Optional, `ffe1` used by default. Should be called before
-`bluetoothTerminal.start()`, does not have impact if called after. Can be set once only, will log error otherwise.
+Sets the BLE characteristic UUID. Optional; if not set, the default UUID `ffe1` will be used. It should be called
+before `bluetoothTerminal.start()`. If used after, the method will have no effect. The characteristic UUID can only be
+set once, if the method is called again, it will log an error, and the existing characteristic UUID will remain
+unchanged.
 
 Example:
 
@@ -151,8 +173,8 @@ void setup()
 
 #### `void setCharacteristicValueSize(int size)`
 
-Set characteristic value size to be used. Optional, `20` bytes used by default. Should be called before
-`bluetoothTerminal.start()`, does not have impact if called after.
+Sets the size of the BLE characteristic value in bytes. Optional; if not set, `20` bytes will be used by default. It
+should be called before `bluetoothTerminal.start()`. If used after, the method will have no effect.
 
 Example:
 
@@ -169,9 +191,11 @@ void setup()
 
 #### `void setName(const char *name)`
 
-Set device name. Optional, by default is `Arduino` and shown only when paired according to the underlying library
-[documentation](https://www.arduino.cc/reference/en/libraries/arduinoble/ble.setdevicename/). Should be called before
-`bluetoothTerminal.start()`, does not have impact if called after. Can be set once only, will log error otherwise.
+Sets the name of the BLE device that is shown when pairing. Optional; if not set, the default name `Arduino` will be
+visible only after pairing (according to underlying library
+[documentation](https://www.arduino.cc/reference/en/libraries/arduinoble/ble.setdevicename/)). It should be called
+before `bluetoothTerminal.start()`. If used after, the method will have no effect. The name can only be set once, if
+the method is called again, it will log an error, and the existing name will remain unchanged.
 
 Example:
 
@@ -367,6 +391,8 @@ The library logs events into `Serial`, for example:
 [BluetoothTerminal]   Message received: "Hello, world!".
 [BluetoothTerminal] Device (address "bc:d0:74:45:13:36") was disconnected.
 ```
+
+## Testing
 
 With message longer than the characteristic value size (20 bytes by default), but less than the receive buffer size
 (128 bytes by default):
