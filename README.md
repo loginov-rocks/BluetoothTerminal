@@ -4,19 +4,82 @@
 [![Arduino Lint](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/arduino-lint.yml/badge.svg)](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/arduino-lint.yml)
 [![PlatformIO Build](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/platformio-build.yml/badge.svg)](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/platformio-build.yml)
 
-This project aims to implement serial-like communication over BLE, which is available in ESP32-S3 SoC, to communicate
-with the [Web Bluetooth Terminal](https://github.com/loginov-rocks/Web-Bluetooth-Terminal) app.
+The **BluetoothTerminal** library is designed for the Arduino framework, providing a simple and efficient way to
+implement serial-like communication over Bluetooth Low Energy (BLE) on microcontrollers.
 
-Notes:
+Built on top of the [ArduinoBLE](https://github.com/arduino-libraries/ArduinoBLE) library, it facilitates seamless
+bidirectional data exchange between a BLE-enabled Arduino-compatible microcontroller and a central device, such as a
+smartphone or tablet, using configurable BLE service and characteristic to pass and send messages ending by
+configurable characters.
 
-* Supports sending messages longer than the characteristic value size (currently hardcoded to 20 bytes) by splitting
-  the message into chunks and sending them with optional delay.
-* Capable of receiving messages up to 128 bytes (configurable), not including the 128th character since it's needed
-  for the null terminator. When the incoming message does not fit the receive buffer the earlier data will be
-  discarded.
-* Implements singleton under the hood, because I have not found a way to set ArduinoBLE event handlers without using
-  static methods. However, the public class interface does not expose this detail and is used as a regular class. This
-  should not have any problems if using a single object.
+* Supports sending messages longer than the configured characteristic value size (`20` bytes by default) by splitting
+  them into chunks and sending with a configurable delay.
+* Can receive messages longer than the characteristic value size as well by using a buffer of configurable length.
+* Provides flexibility to configure service UUIDs, characteristic UUIDs, BLE module name, and other parameters, making
+  it adaptable to various applications.
+
+Whether you're developing an IoT application, a remote control system, or any other project requiring reliable
+serial-like communication over BLE on Arduino-compatible microcontrollers, this library offers a way to get started
+quickly.
+
+Note: the implementation utilizes a singleton pattern internally due to the necessity of static methods for configuring
+ArduinoBLE event handlers. Despite this, the public interface of the class remains consistent with standard class
+usage, and the library is designed to function correctly with a single instance.
+
+## Quick Start
+
+As a proof of concept, you can use code below with the
+[Web Bluetooth Terminal](https://github.com/loginov-rocks/Web-Bluetooth-Terminal) app in your browser to test
+serial-like communication over BLE.
+
+```cpp
+#include <BluetoothTerminal.h>
+
+BluetoothTerminal bluetoothTerminal;
+unsigned long lastMillis = 0;
+
+void handleConnect(BLEDevice device)
+{
+  Serial.println("Device connected");
+}
+
+void handleDisconnect(BLEDevice device)
+{
+  Serial.println("Device disconnected");
+}
+
+void handleReceive(const char *message)
+{
+  Serial.print("Message received: ");
+  Serial.println(message);
+}
+
+void setup()
+{
+  Serial.begin(115200);
+  bluetoothTerminal.onConnect(handleConnect);
+  bluetoothTerminal.onDisconnect(handleDisconnect);
+  bluetoothTerminal.onReceive(handleReceive);
+  bluetoothTerminal.start();
+}
+
+void loop()
+{
+  unsigned long currentMillis = millis();
+
+  if (currentMillis > lastMillis + 5000)
+  {
+    lastMillis = currentMillis;
+
+    if (bluetoothTerminal.isConnected())
+    {
+      bluetoothTerminal.send("Hello, world!");
+    }
+  }
+
+  bluetoothTerminal.loop();
+}
+```
 
 ## API
 
@@ -134,9 +197,11 @@ void setup()
 
 #### `void setServiceUuid(const char *uuid)`
 
-Sets the BLE service UUID. Optional; if not set, the default UUID `ffe0` will be used. It should be called before
-`bluetoothTerminal.start()`. If used after, the method will have no effect. The service UUID can only be set once, if
-the method is called again, it will log an error, and the existing service UUID will remain unchanged.
+Sets the BLE service UUID.
+
+Optional; if not set, the default UUID `ffe0` will be used. It should be called before `bluetoothTerminal.start()`. If
+used after, the method will have no effect. The service UUID can only be set once, if the method is called again, it
+will log an error, and the existing service UUID will remain unchanged.
 
 Example:
 
@@ -153,10 +218,11 @@ void setup()
 
 #### `void setCharacteristicUuid(const char *uuid)`
 
-Sets the BLE characteristic UUID. Optional; if not set, the default UUID `ffe1` will be used. It should be called
-before `bluetoothTerminal.start()`. If used after, the method will have no effect. The characteristic UUID can only be
-set once, if the method is called again, it will log an error, and the existing characteristic UUID will remain
-unchanged.
+Sets the BLE characteristic UUID.
+
+Optional; if not set, the default UUID `ffe1` will be used. It should be called before `bluetoothTerminal.start()`. If
+used after, the method will have no effect. The characteristic UUID can only be set once, if the method is called
+again, it will log an error, and the existing characteristic UUID will remain unchanged.
 
 Example:
 
@@ -173,8 +239,10 @@ void setup()
 
 #### `void setCharacteristicValueSize(int size)`
 
-Sets the size of the BLE characteristic value in bytes. Optional; if not set, `20` bytes will be used by default. It
-should be called before `bluetoothTerminal.start()`. If used after, the method will have no effect.
+Sets the size of the BLE characteristic value in bytes.
+
+Optional; if not set, `20` bytes will be used by default. It should be called before `bluetoothTerminal.start()`. If
+used after, the method will have no effect.
 
 Example:
 
@@ -191,8 +259,9 @@ void setup()
 
 #### `void setName(const char *name)`
 
-Sets the name of the BLE device that is shown when pairing. Optional; if not set, the default name `Arduino` will be
-visible only after pairing (according to underlying library
+Sets the name of the BLE device that is shown when pairing.
+
+Optional; if not set, the default name `Arduino` will be visible only after pairing (according to underlying library
 [documentation](https://www.arduino.cc/reference/en/libraries/arduinoble/ble.setdevicename/)). It should be called
 before `bluetoothTerminal.start()`. If used after, the method will have no effect. The name can only be set once, if
 the method is called again, it will log an error, and the existing name will remain unchanged.
@@ -212,10 +281,14 @@ void setup()
 
 #### `void setReceiveBufferSize(size_t size)`
 
-Set receive buffer size in bytes. Use to accommodate longer messages.
+Sets the size of the buffer used for receiving data. The buffer accumulates received data until the receive separator
+(`\n` by default) is detected, indicating the end of a message. The buffer must be large enough to accommodate the
+entire message, including the separator, before processing. If a message exceeds the buffer size, the oldest data will
+be discarded to make room for new incoming data, preventing buffer overflow. Setting a buffer size that fits the
+expected message lengths is essential to avoid unintended data loss.
 
-Optional, `128` bytes by default. Can be changed in runtime, for example during `loop()` execution. However, when
-changed it discards the current receive buffer data.
+Optional; if not set, `128` bytes will be used by default. If called in runtime, for example during `loop()` execution,
+and there is data in the buffer, it will be discarded.
 
 Example:
 
@@ -232,9 +305,9 @@ void setup()
 
 #### `void setReceiveSeparator(char separator)`
 
-Set character serving as a separator when receiving messages.
+Sets the separator character used to identify the end of a received message.
 
-Optional, `\n` by default. Can be changed in runtime, for example during `loop()` execution.
+Optional; if not set, `\n` will be used by default. Can be called in runtime, for example during `loop()` execution.
 
 Example:
 
@@ -251,9 +324,9 @@ void setup()
 
 #### `void setSendSeparator(char separator)`
 
-Set character serving as a separator when sending messages.
+Sets the separator character appended to each message sent.
 
-Optional, `\n` by default. Can be changed in runtime, for example during `loop()` execution.
+Optional; if not set, `\n` will be used by default. Can be called in runtime, for example during `loop()` execution.
 
 Example:
 
@@ -270,11 +343,11 @@ void setup()
 
 #### `void setSendDelay(int delay)`
 
-Set delay in milliseconds to wait in between sending message in chunks, when the message length including the send
-separator is longer than the characteristic value size. Use when some chunks of the message are not received by the
-central device (connecting to the BLE module).
+Sets a delay in milliseconds to wait between sending chunks of a message when the total message length, including the
+send separator, exceeds the characteristic value size. This delay is useful in cases where some chunks are not received
+by the central device (the device connecting to the BLE module).
 
-Optional, no delay is set by default. Can be changed in runtime, for example during `loop()` execution.
+Optional; if not set, no delay will be used by default.
 
 Example:
 
@@ -291,7 +364,11 @@ void setup()
 
 #### `void start()`
 
-Initializes and starts the BLE service and characteristic.
+Initializes and starts the BLE service, making the device discoverable and ready to accept connections. It is
+recommended to call this method after completing all other configurations, such as setting the service UUID,
+characteristic UUID, device name, and buffer sizes. Once start() is called, changes to these settings will not take
+effect. Starting the service after configuration ensures that all settings are correctly applied before the BLE service
+becomes active.
 
 Example:
 
@@ -308,7 +385,7 @@ void setup()
 
 #### `void loop()`
 
-Polls BLE events; should be called in the `loop()` function.
+Handles BLE events and should be called in the main `loop()` of your application.
 
 Example:
 
@@ -349,7 +426,8 @@ void loop()
 
 #### `void send(const char *message)`
 
-Sends a message to the connected BLE device.
+Sends a message over BLE to the connected device. If the message exceeds the characteristic value size, it is split
+into chunks and sent sequentially.
 
 Example:
 
@@ -392,50 +470,15 @@ The library logs events into `Serial`, for example:
 [BluetoothTerminal] Device (address "bc:d0:74:45:13:36") was disconnected.
 ```
 
-## Testing
-
-With message longer than the characteristic value size (20 bytes by default), but less than the receive buffer size
-(128 bytes by default):
-
-```
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-```
+When a message is received that is longer than the receive buffer size (including the receive separator), the oldest
+data will be discarded with the following log message:
 
 ```
 [BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 4 bytes into the characteristic.
-[BluetoothTerminal]   Message received: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.".
+[BluetoothTerminal]   Receive buffer overflow, data discarded: "Hello, world!".
 ```
 
-With message longer than the receive buffer size (128 bytes by default):
+## Tested Boards
 
-```
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-```
-
-```
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal]   Receive buffer overflow, data discarded: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut ".
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
-[BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 12 bytes into the characteristic.
-[BluetoothTerminal]   Message received: "enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.".
-```
-
-## Reference
-
-* Underlying library: [ArduinoBLE library](https://github.com/arduino-libraries/ArduinoBLE)
-* Initially library used: [ESP32 BLE library](https://github.com/nkolban/ESP32_BLE_Arduino)
+* ESP32-S3:
+  * [WEMOS LOLIN S3 (V1.0.0)](https://www.wemos.cc/en/latest/s3/s3.html)
