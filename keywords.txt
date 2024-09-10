@@ -15,6 +15,11 @@ BluetoothTerminal	KEYWORD1
 onConnect	KEYWORD2
 onDisconnect	KEYWORD2
 onReceive	KEYWORD2
+setServiceUuid	KEYWORD2
+setCharacteristicUuid	KEYWORD2
+setCharacteristicValueSize	KEYWORD2
+setName	KEYWORD2
+setReceiveBufferSize	KEYWORD2
 setReceiveSeparator	KEYWORD2
 setSendSeparator	KEYWORD2
 setSendDelay	KEYWORD2

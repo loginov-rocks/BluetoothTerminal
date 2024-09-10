@@ -4,33 +4,38 @@
 [![Arduino Lint](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/arduino-lint.yml/badge.svg)](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/arduino-lint.yml)
 [![PlatformIO Build](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/platformio-build.yml/badge.svg)](https://github.com/loginov-rocks/BluetoothTerminal/actions/workflows/platformio-build.yml)
 
-The **BluetoothTerminal** library is designed for the Arduino framework, providing a simple and efficient way to
-implement serial-like communication over Bluetooth Low Energy (BLE) on microcontrollers.
+The **BluetoothTerminal** library is designed for the **Arduino** framework, providing a simple and efficient way to
+implement serial-like communication over **Bluetooth Low Energy** (BLE) on microcontrollers.
+
+Arduino Reference: https://www.arduino.cc/reference/en/libraries/bluetoothterminal/
 
 Built on top of the [ArduinoBLE](https://github.com/arduino-libraries/ArduinoBLE) library, it facilitates seamless
-bidirectional data exchange between a BLE-enabled Arduino-compatible microcontroller and a central device, such as a
-smartphone or tablet, using configurable BLE service and characteristic to pass and send messages ending by
-configurable characters.
+bidirectional data exchange between a **BLE**-enabled **Arduino**-compatible microcontroller and a central device, such
+as a smartphone or tablet, using configurable BLE service and characteristic to pass and send messages ending by
+configurable separator characters (`\n` by default).
 
 * Supports sending messages longer than the configured characteristic value size (`20` bytes by default) by splitting
   them into chunks and sending with a configurable delay.
-* Can receive messages longer than the characteristic value size as well by using a buffer of configurable length.
-* Provides flexibility to configure service UUIDs, characteristic UUIDs, BLE module name, and other parameters, making
-  it adaptable to various applications.
+* Abstracts away reception of messages longer than the characteristic value size by using a buffer of configurable
+  length (`128` bytes by default).
+* Provides flexibility to configure service UUID, characteristic UUID, BLE module name, and other used parameters,
+  making it adaptable to various applications.
 
 Whether you're developing an IoT application, a remote control system, or any other project requiring reliable
-serial-like communication over BLE on Arduino-compatible microcontrollers, this library offers a way to get started
-quickly.
+serial-like communication over **BLE** on **Arduino**-compatible microcontrollers, this library offers a way to get
+started quickly.
 
 Note: the implementation utilizes a singleton pattern internally due to the necessity of static methods for configuring
-ArduinoBLE event handlers. Despite this, the public interface of the class remains consistent with standard class
-usage, and the library is designed to function correctly with a single instance.
+[ArduinoBLE](https://github.com/arduino-libraries/ArduinoBLE) event handlers. Despite this, the public interface of the
+class remains consistent with standard class usage, and the library is designed to function correctly with a single
+instance.
 
 ## Quick Start
 
-As a proof of concept, you can use code below with the
+As a proof of concept, you can use the code below with the
 [Web Bluetooth Terminal](https://github.com/loginov-rocks/Web-Bluetooth-Terminal) app in your browser to test
-serial-like communication over BLE.
+serial-like communication over BLE. The sketch below starts sending a `Hello, world!` message every 5 seconds to the
+connected central device and outputs messages sent from the device to the terminal.
 
 ```cpp
 #include <BluetoothTerminal.h>
@@ -307,7 +312,7 @@ void setup()
 
 Sets the separator character used to identify the end of a received message.
 
-Optional; if not set, `\n` will be used by default. Can be called in runtime, for example during `loop()` execution.
+Optional; if not set, `\n` will be used by default. Can be changed in runtime, for example during `loop()` execution.
 
 Example:
 
@@ -326,7 +331,7 @@ void setup()
 
 Sets the separator character appended to each message sent.
 
-Optional; if not set, `\n` will be used by default. Can be called in runtime, for example during `loop()` execution.
+Optional; if not set, `\n` will be used by default. Can be changed in runtime, for example during `loop()` execution.
 
 Example:
 
@@ -347,7 +352,8 @@ Sets a delay in milliseconds to wait between sending chunks of a message when th
 send separator, exceeds the characteristic value size. This delay is useful in cases where some chunks are not received
 by the central device (the device connecting to the BLE module).
 
-Optional; if not set, no delay will be used by default.
+Optional; if not set, no delay will be used by default. Can be changed in runtime, for example during `loop()`
+execution.
 
 Example:
 
@@ -427,7 +433,7 @@ void loop()
 #### `void send(const char *message)`
 
 Sends a message over BLE to the connected device. If the message exceeds the characteristic value size, it is split
-into chunks and sent sequentially.
+into chunks and sent sequentially with delay if configured.
 
 Example:
 
@@ -440,11 +446,9 @@ void loop()
 }
 ```
 
----
-
 ## Logging
 
-The library logs events into `Serial`, for example:
+The library logs every event into `Serial` like this:
 
 ```
 [BluetoothTerminal] The connect handler is set.
@@ -470,8 +474,8 @@ The library logs events into `Serial`, for example:
 [BluetoothTerminal] Device (address "bc:d0:74:45:13:36") was disconnected.
 ```
 
-When a message is received that is longer than the receive buffer size (including the receive separator), the oldest
-data will be discarded with the following log message:
+When a message is received and it is longer than the receive buffer size (including the receive separator) configured,
+the oldest data will be discarded with the following log message:
 
 ```
 [BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
