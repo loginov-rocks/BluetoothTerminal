@@ -54,52 +54,62 @@ void BluetoothTerminal::onReceive(ReceiveHandler handler)
   Serial.println("[BluetoothTerminal] The receive handler is set.");
 }
 
-void BluetoothTerminal::setServiceUuid(const char *uuid)
+bool BluetoothTerminal::setServiceUuid(const char *uuid)
 {
-  if (uuid != nullptr)
+  if (uuid == nullptr)
   {
-    BluetoothTerminal &instance = BluetoothTerminal::getInstance();
-
-    if (instance.serviceUuid != nullptr)
-    {
-      Serial.print("[BluetoothTerminal] Setting the service UUID failed, it was already set to \"");
-      Serial.print(instance.serviceUuid);
-      Serial.println("\"!");
-      return;
-    }
-
-    size_t length = strlen(uuid) + 1;
-    instance.serviceUuid = new char[length];
-    strncpy(instance.serviceUuid, uuid, length);
-
-    Serial.print("[BluetoothTerminal] The service UUID is set to \"");
-    Serial.print(instance.serviceUuid);
-    Serial.println("\".");
+    return false;
   }
+
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
+  if (instance.serviceUuid != nullptr)
+  {
+    Serial.print("[BluetoothTerminal] Setting the service UUID failed, it was already set to \"");
+    Serial.print(instance.serviceUuid);
+    Serial.println("\"!");
+
+    return false;
+  }
+
+  size_t length = strlen(uuid) + 1;
+  instance.serviceUuid = new char[length];
+  strncpy(instance.serviceUuid, uuid, length);
+
+  Serial.print("[BluetoothTerminal] The service UUID is set to \"");
+  Serial.print(instance.serviceUuid);
+  Serial.println("\".");
+
+  return true;
 }
 
-void BluetoothTerminal::setCharacteristicUuid(const char *uuid)
+bool BluetoothTerminal::setCharacteristicUuid(const char *uuid)
 {
-  if (uuid != nullptr)
+  if (uuid == nullptr)
   {
-    BluetoothTerminal &instance = BluetoothTerminal::getInstance();
-
-    if (instance.characteristicUuid != nullptr)
-    {
-      Serial.print("[BluetoothTerminal] Setting the characteristic UUID failed, it was already set to \"");
-      Serial.print(instance.characteristicUuid);
-      Serial.println("\"!");
-      return;
-    }
-
-    size_t length = strlen(uuid) + 1;
-    instance.characteristicUuid = new char[length];
-    strncpy(instance.characteristicUuid, uuid, length);
-
-    Serial.print("[BluetoothTerminal] The characteristic UUID is set to \"");
-    Serial.print(instance.characteristicUuid);
-    Serial.println("\".");
+    return false;
   }
+
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
+  if (instance.characteristicUuid != nullptr)
+  {
+    Serial.print("[BluetoothTerminal] Setting the characteristic UUID failed, it was already set to \"");
+    Serial.print(instance.characteristicUuid);
+    Serial.println("\"!");
+
+    return false;
+  }
+
+  size_t length = strlen(uuid) + 1;
+  instance.characteristicUuid = new char[length];
+  strncpy(instance.characteristicUuid, uuid, length);
+
+  Serial.print("[BluetoothTerminal] The characteristic UUID is set to \"");
+  Serial.print(instance.characteristicUuid);
+  Serial.println("\".");
+
+  return true;
 }
 
 void BluetoothTerminal::setCharacteristicValueSize(int size)
@@ -111,28 +121,33 @@ void BluetoothTerminal::setCharacteristicValueSize(int size)
   Serial.println(" bytes.");
 }
 
-void BluetoothTerminal::setName(const char *name)
+bool BluetoothTerminal::setName(const char *name)
 {
   if (name != nullptr)
   {
-    BluetoothTerminal &instance = BluetoothTerminal::getInstance();
-
-    if (instance.name != nullptr)
-    {
-      Serial.print("[BluetoothTerminal] Setting the name failed, it was already set to \"");
-      Serial.print(instance.name);
-      Serial.println("\"!");
-      return;
-    }
-
-    size_t length = strlen(name) + 1;
-    instance.name = new char[length];
-    strncpy(instance.name, name, length);
-
-    Serial.print("[BluetoothTerminal] The name is set to \"");
-    Serial.print(instance.name);
-    Serial.println("\".");
+    return false;
   }
+
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
+  if (instance.name != nullptr)
+  {
+    Serial.print("[BluetoothTerminal] Setting the name failed, it was already set to \"");
+    Serial.print(instance.name);
+    Serial.println("\"!");
+
+    return false;
+  }
+
+  size_t length = strlen(name) + 1;
+  instance.name = new char[length];
+  strncpy(instance.name, name, length);
+
+  Serial.print("[BluetoothTerminal] The name is set to \"");
+  Serial.print(instance.name);
+  Serial.println("\".");
+
+  return true;
 }
 
 void BluetoothTerminal::setReceiveBufferSize(size_t size)
@@ -185,14 +200,17 @@ void BluetoothTerminal::setSendDelay(int delay)
   Serial.println(" milliseconds.");
 }
 
-void BluetoothTerminal::start()
+bool BluetoothTerminal::start()
 {
   Serial.print("[BluetoothTerminal] Starting BLE service...");
+
   if (!BLE.begin())
   {
     Serial.println(" failed!");
-    return;
+
+    return false;
   }
+
   Serial.println(" successful.");
 
   Serial.println("[BluetoothTerminal] Setting up BLE service and characteristic...");
@@ -232,6 +250,8 @@ void BluetoothTerminal::start()
   BLE.advertise();
 
   Serial.println("[BluetoothTerminal] BLE service and characteristic were set up.");
+
+  return true;
 }
 
 void BluetoothTerminal::loop()
@@ -244,7 +264,7 @@ bool BluetoothTerminal::isConnected()
   return BluetoothTerminal::getInstance().deviceConnected;
 }
 
-void BluetoothTerminal::send(const char *message)
+bool BluetoothTerminal::send(const char *message)
 {
   Serial.print("[BluetoothTerminal] Sending message: \"");
   Serial.print(message);
@@ -255,7 +275,8 @@ void BluetoothTerminal::send(const char *message)
   if (!instance.isConnected())
   {
     Serial.println(" failed, no device connected!");
-    return;
+
+    return false;
   }
 
   size_t length = strlen(message);
@@ -276,7 +297,8 @@ void BluetoothTerminal::send(const char *message)
     instance.bleCharacteristic->setValue(messageWithSeparator);
 
     Serial.println(" sent.");
-    return;
+
+    return true;
   }
 
   // Otherwise, split the message into chunks and send them one by one with a
@@ -330,6 +352,8 @@ void BluetoothTerminal::send(const char *message)
   }
 
   Serial.println("[BluetoothTerminal]   All message chunks were sent.");
+
+  return true;
 }
 
 BluetoothTerminal &BluetoothTerminal::getInstance()

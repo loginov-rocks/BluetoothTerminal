@@ -93,18 +93,18 @@ void loop()
   * [void onConnect(std::function<void(BLEDevice)> handler)](#void-onconnectstdfunctionvoidbledevice-handler)
   * [void onDisconnect(std::function<void(BLEDevice)> handler)](#void-ondisconnectstdfunctionvoidbledevice-handler)
   * [void onReceive(std::function<void(const char*)> handler)](#void-onreceivestdfunctionvoidconst-char-handler)
-  * [void setServiceUuid(const char *uuid)](#void-setserviceuuidconst-char-uuid)
-  * [void setCharacteristicUuid(const char *uuid)](#void-setcharacteristicuuidconst-char-uuid)
+  * [bool setServiceUuid(const char *uuid)](#bool-setserviceuuidconst-char-uuid)
+  * [bool setCharacteristicUuid(const char *uuid)](#bool-setcharacteristicuuidconst-char-uuid)
   * [void setCharacteristicValueSize(int size)](#void-setcharacteristicvaluesizeint-size)
-  * [void setName(const char *name)](#void-setnameconst-char-name)
+  * [bool setName(const char *name)](#bool-setnameconst-char-name)
   * [void setReceiveBufferSize(size_t size)](#void-setreceivebuffersizesize_t-size)
   * [void setReceiveSeparator(char separator)](#void-setreceiveseparatorchar-separator)
   * [void setSendSeparator(char separator)](#void-setsendseparatorchar-separator)
   * [void setSendDelay(int delay)](#void-setsenddelayint-delay)
-  * [void start()](#void-start)
+  * [bool start()](#bool-start)
   * [void loop()](#void-loop)
   * [bool isConnected()](#bool-isconnected)
-  * [void send(const char *message)](#void-sendconst-char-message)
+  * [bool send(const char *message)](#bool-sendconst-char-message)
 
 ---
 
@@ -200,9 +200,9 @@ void setup()
 
 ---
 
-#### `void setServiceUuid(const char *uuid)`
+#### `bool setServiceUuid(const char *uuid)`
 
-Sets the BLE service UUID.
+Sets the BLE service UUID. Returns `true` on success and `false` otherwise.
 
 Optional; if not set, the default UUID `ffe0` will be used. It should be called before `bluetoothTerminal.start()`. If
 used after, the method will have no effect. The service UUID can only be set once, if the method is called again, it
@@ -221,9 +221,9 @@ void setup()
 
 ---
 
-#### `void setCharacteristicUuid(const char *uuid)`
+#### `bool setCharacteristicUuid(const char *uuid)`
 
-Sets the BLE characteristic UUID.
+Sets the BLE characteristic UUID. Returns `true` on success and `false` otherwise.
 
 Optional; if not set, the default UUID `ffe1` will be used. It should be called before `bluetoothTerminal.start()`. If
 used after, the method will have no effect. The characteristic UUID can only be set once, if the method is called
@@ -262,9 +262,9 @@ void setup()
 
 ---
 
-#### `void setName(const char *name)`
+#### `bool setName(const char *name)`
 
-Sets the name of the BLE device that is shown when pairing.
+Sets the name of the BLE device that is shown when pairing. Returns `true` on success and `false` otherwise.
 
 Optional; if not set, the default name `Arduino` will be visible only after pairing (according to underlying library
 [documentation](https://www.arduino.cc/reference/en/libraries/arduinoble/ble.setdevicename/)). It should be called
@@ -368,10 +368,12 @@ void setup()
 
 ---
 
-#### `void start()`
+#### `bool start()`
 
-Initializes and starts the BLE service, making the device discoverable and ready to accept connections. It is
-recommended to call this method after completing all other configurations, such as setting the service UUID,
+Initializes and starts the BLE service, making the device discoverable and ready to accept connections. Returns `true`
+on success and `false` otherwise.
+
+It is recommended to call this method after completing all other configurations, such as setting the service UUID,
 characteristic UUID, device name, and buffer sizes. Once start() is called, changes to these settings will not take
 effect. Starting the service after configuration ensures that all settings are correctly applied before the BLE service
 becomes active.
@@ -430,10 +432,10 @@ void loop()
 
 ---
 
-#### `void send(const char *message)`
+#### `bool send(const char *message)`
 
 Sends a message over BLE to the connected device. If the message exceeds the characteristic value size, it is split
-into chunks and sent sequentially with delay if configured.
+into chunks and sent sequentially with delay if configured. Returns `true` on success and `false` otherwise.
 
 Example:
 

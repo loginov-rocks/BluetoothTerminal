@@ -15,21 +15,21 @@ public:
   using ReceiveHandler = std::function<void(const char *)>;
   void onReceive(ReceiveHandler);
 
-  void setServiceUuid(const char *);
-  void setCharacteristicUuid(const char *);
+  bool setServiceUuid(const char *);
+  bool setCharacteristicUuid(const char *);
   void setCharacteristicValueSize(int);
 
-  void setName(const char *);
+  bool setName(const char *);
   void setReceiveBufferSize(size_t size);
   void setReceiveSeparator(char);
   void setSendSeparator(char);
   void setSendDelay(int);
 
-  void start();
+  bool start();
   void loop();
 
   bool isConnected();
-  void send(const char *);
+  bool send(const char *);
 
 private:
   BLEService *bleService = nullptr;
