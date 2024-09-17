@@ -8,6 +8,9 @@ class BluetoothTerminal
 public:
   ~BluetoothTerminal();
 
+  void enableDebug();
+  void disableDebug();
+
   using ConnectHandler = std::function<void(BLEDevice)>;
   void onConnect(ConnectHandler);
   using DisconnectHandler = std::function<void(BLEDevice)>;
@@ -32,6 +35,8 @@ public:
   bool send(const char *);
 
 private:
+  bool isDebugEnabled = false;
+
   BLEService *bleService = nullptr;
   BLECharacteristic *bleCharacteristic = nullptr;
 

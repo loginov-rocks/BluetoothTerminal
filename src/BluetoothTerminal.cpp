@@ -33,25 +33,57 @@ BluetoothTerminal::~BluetoothTerminal()
   }
 }
 
+void BluetoothTerminal::enableDebug()
+{
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+  instance.isDebugEnabled = true;
+
+  Serial.println("[BluetoothTerminal] Debug enabled.");
+}
+
+void BluetoothTerminal::disableDebug()
+{
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
+  if (instance.isDebugEnabled)
+  {
+    Serial.println("[BluetoothTerminal] Debug disabled.");
+  }
+
+  instance.isDebugEnabled = false;
+}
+
 void BluetoothTerminal::onConnect(ConnectHandler handler)
 {
-  BluetoothTerminal::getInstance().connectHandler = handler;
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+  instance.connectHandler = handler;
 
-  Serial.println("[BluetoothTerminal] The connect handler is set.");
+  if (instance.isDebugEnabled)
+  {
+    Serial.println("[BluetoothTerminal] The connect handler is set.");
+  }
 }
 
 void BluetoothTerminal::onDisconnect(DisconnectHandler handler)
 {
-  BluetoothTerminal::getInstance().disconnectHandler = handler;
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+  instance.disconnectHandler = handler;
 
-  Serial.println("[BluetoothTerminal] The disconnect handler is set.");
+  if (instance.isDebugEnabled)
+  {
+    Serial.println("[BluetoothTerminal] The disconnect handler is set.");
+  }
 }
 
 void BluetoothTerminal::onReceive(ReceiveHandler handler)
 {
-  BluetoothTerminal::getInstance().receiveHandler = handler;
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+  instance.receiveHandler = handler;
 
-  Serial.println("[BluetoothTerminal] The receive handler is set.");
+  if (instance.isDebugEnabled)
+  {
+    Serial.println("[BluetoothTerminal] The receive handler is set.");
+  }
 }
 
 bool BluetoothTerminal::setServiceUuid(const char *uuid)
@@ -65,9 +97,12 @@ bool BluetoothTerminal::setServiceUuid(const char *uuid)
 
   if (instance.serviceUuid != nullptr)
   {
-    Serial.print("[BluetoothTerminal] Setting the service UUID failed, it was already set to \"");
-    Serial.print(instance.serviceUuid);
-    Serial.println("\"!");
+    if (instance.isDebugEnabled)
+    {
+      Serial.print("[BluetoothTerminal] Setting the service UUID failed, it was already set to \"");
+      Serial.print(instance.serviceUuid);
+      Serial.println("\"!");
+    }
 
     return false;
   }
@@ -76,9 +111,12 @@ bool BluetoothTerminal::setServiceUuid(const char *uuid)
   instance.serviceUuid = new char[length];
   strncpy(instance.serviceUuid, uuid, length);
 
-  Serial.print("[BluetoothTerminal] The service UUID is set to \"");
-  Serial.print(instance.serviceUuid);
-  Serial.println("\".");
+  if (instance.isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] The service UUID is set to \"");
+    Serial.print(instance.serviceUuid);
+    Serial.println("\".");
+  }
 
   return true;
 }
@@ -94,9 +132,12 @@ bool BluetoothTerminal::setCharacteristicUuid(const char *uuid)
 
   if (instance.characteristicUuid != nullptr)
   {
-    Serial.print("[BluetoothTerminal] Setting the characteristic UUID failed, it was already set to \"");
-    Serial.print(instance.characteristicUuid);
-    Serial.println("\"!");
+    if (instance.isDebugEnabled)
+    {
+      Serial.print("[BluetoothTerminal] Setting the characteristic UUID failed, it was already set to \"");
+      Serial.print(instance.characteristicUuid);
+      Serial.println("\"!");
+    }
 
     return false;
   }
@@ -105,20 +146,27 @@ bool BluetoothTerminal::setCharacteristicUuid(const char *uuid)
   instance.characteristicUuid = new char[length];
   strncpy(instance.characteristicUuid, uuid, length);
 
-  Serial.print("[BluetoothTerminal] The characteristic UUID is set to \"");
-  Serial.print(instance.characteristicUuid);
-  Serial.println("\".");
+  if (instance.isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] The characteristic UUID is set to \"");
+    Serial.print(instance.characteristicUuid);
+    Serial.println("\".");
+  }
 
   return true;
 }
 
 void BluetoothTerminal::setCharacteristicValueSize(int size)
 {
-  BluetoothTerminal::getInstance().characteristicValueSize = size;
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+  instance.characteristicValueSize = size;
 
-  Serial.print("[BluetoothTerminal] The characteristic value size is set to ");
-  Serial.print(size);
-  Serial.println(" bytes.");
+  if (instance.isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] The characteristic value size is set to ");
+    Serial.print(size);
+    Serial.println(" bytes.");
+  }
 }
 
 bool BluetoothTerminal::setName(const char *name)
@@ -132,9 +180,12 @@ bool BluetoothTerminal::setName(const char *name)
 
   if (instance.name != nullptr)
   {
-    Serial.print("[BluetoothTerminal] Setting the name failed, it was already set to \"");
-    Serial.print(instance.name);
-    Serial.println("\"!");
+    if (instance.isDebugEnabled)
+    {
+      Serial.print("[BluetoothTerminal] Setting the name failed, it was already set to \"");
+      Serial.print(instance.name);
+      Serial.println("\"!");
+    }
 
     return false;
   }
@@ -143,9 +194,12 @@ bool BluetoothTerminal::setName(const char *name)
   instance.name = new char[length];
   strncpy(instance.name, name, length);
 
-  Serial.print("[BluetoothTerminal] The name is set to \"");
-  Serial.print(instance.name);
-  Serial.println("\".");
+  if (instance.isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] The name is set to \"");
+    Serial.print(instance.name);
+    Serial.println("\".");
+  }
 
   return true;
 }
@@ -167,55 +221,78 @@ void BluetoothTerminal::setReceiveBufferSize(size_t size)
     instance.receiveBufferInitialized = false;
     instance.receiveBufferSize = size;
 
-    Serial.print("[BluetoothTerminal] The receive buffer size is set to ");
-    Serial.print(instance.receiveBufferSize);
-    Serial.println(" bytes.");
+    if (instance.isDebugEnabled)
+    {
+      Serial.print("[BluetoothTerminal] The receive buffer size is set to ");
+      Serial.print(instance.receiveBufferSize);
+      Serial.println(" bytes.");
+    }
   }
 }
 
 void BluetoothTerminal::setReceiveSeparator(char separator)
 {
-  BluetoothTerminal::getInstance().receiveSeparator = separator;
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+  instance.receiveSeparator = separator;
 
-  Serial.print("[BluetoothTerminal] The receive separator is set to \"");
-  Serial.print(separator);
-  Serial.println("\".");
+  if (instance.isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] The receive separator is set to \"");
+    Serial.print(separator);
+    Serial.println("\".");
+  }
 }
 
 void BluetoothTerminal::setSendSeparator(char separator)
 {
-  BluetoothTerminal::getInstance().sendSeparator = separator;
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+  instance.sendSeparator = separator;
 
-  Serial.print("[BluetoothTerminal] The send separator is set to \"");
-  Serial.print(separator);
-  Serial.println("\".");
+  if (instance.isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] The send separator is set to \"");
+    Serial.print(separator);
+    Serial.println("\".");
+  }
 }
 
 void BluetoothTerminal::setSendDelay(int delay)
 {
-  BluetoothTerminal::getInstance().sendDelay = delay;
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+  instance.sendDelay = delay;
 
-  Serial.print("[BluetoothTerminal] The send delay is set to ");
-  Serial.print(delay);
-  Serial.println(" milliseconds.");
+  if (instance.isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] The send delay is set to ");
+    Serial.print(delay);
+    Serial.println(" milliseconds.");
+  }
 }
 
 bool BluetoothTerminal::start()
 {
-  Serial.print("[BluetoothTerminal] Starting BLE service...");
+  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
+  if (instance.isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] Starting BLE service...");
+  }
 
   if (!BLE.begin())
   {
-    Serial.println(" failed!");
+    if (instance.isDebugEnabled)
+    {
+      Serial.println(" failed!");
+    }
 
     return false;
   }
 
-  Serial.println(" successful.");
-
-  Serial.println("[BluetoothTerminal] Setting up BLE service and characteristic...");
-
-  BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+  if (instance.isDebugEnabled)
+  {
+    Serial.println(" successful.");
+    Serial.println("[BluetoothTerminal] Setting up BLE service and characteristic...");
+  }
 
   if (instance.name != nullptr)
   {
@@ -249,7 +326,10 @@ bool BluetoothTerminal::start()
   BLE.setAdvertisedService(*instance.bleService);
   BLE.advertise();
 
-  Serial.println("[BluetoothTerminal] BLE service and characteristic were set up.");
+  if (instance.isDebugEnabled)
+  {
+    Serial.println("[BluetoothTerminal] BLE service and characteristic were set up.");
+  }
 
   return true;
 }
@@ -266,15 +346,21 @@ bool BluetoothTerminal::isConnected()
 
 bool BluetoothTerminal::send(const char *message)
 {
-  Serial.print("[BluetoothTerminal] Sending message: \"");
-  Serial.print(message);
-  Serial.print("\"...");
-
   BluetoothTerminal &instance = BluetoothTerminal::getInstance();
+
+  if (instance.isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] Sending message: \"");
+    Serial.print(message);
+    Serial.print("\"...");
+  }
 
   if (!instance.isConnected())
   {
-    Serial.println(" failed, no device connected!");
+    if (instance.isDebugEnabled)
+    {
+      Serial.println(" failed, no device connected!");
+    }
 
     return false;
   }
@@ -296,7 +382,10 @@ bool BluetoothTerminal::send(const char *message)
 
     instance.bleCharacteristic->setValue(messageWithSeparator);
 
-    Serial.println(" sent.");
+    if (instance.isDebugEnabled)
+    {
+      Serial.println(" sent.");
+    }
 
     return true;
   }
@@ -309,14 +398,17 @@ bool BluetoothTerminal::send(const char *message)
     numOfChunks += 1;
   }
 
-  Serial.println();
-  Serial.print("[BluetoothTerminal]   Message length (");
-  Serial.print(length);
-  Serial.print(" characters) with the separator is longer than the characteristic value size (");
-  Serial.print(instance.characteristicValueSize);
-  Serial.print(" bytes), sending in ");
-  Serial.print(numOfChunks);
-  Serial.println(" chunks...");
+  if (instance.isDebugEnabled)
+  {
+    Serial.println();
+    Serial.print("[BluetoothTerminal]   Message length (");
+    Serial.print(length);
+    Serial.print(" characters) with the separator is longer than the characteristic value size (");
+    Serial.print(instance.characteristicValueSize);
+    Serial.print(" bytes), sending in ");
+    Serial.print(numOfChunks);
+    Serial.println(" chunks...");
+  }
 
   for (int i = 0; i < numOfChunks; i++)
   {
@@ -335,11 +427,14 @@ bool BluetoothTerminal::send(const char *message)
     }
     chunk[chunkLength] = '\0';
 
-    Serial.print("[BluetoothTerminal]     Sending chunk ");
-    Serial.print(i + 1);
-    Serial.print(": \"");
-    Serial.print(chunk);
-    Serial.print("\"...");
+    if (instance.isDebugEnabled)
+    {
+      Serial.print("[BluetoothTerminal]     Sending chunk ");
+      Serial.print(i + 1);
+      Serial.print(": \"");
+      Serial.print(chunk);
+      Serial.print("\"...");
+    }
 
     instance.bleCharacteristic->setValue(chunk);
 
@@ -348,10 +443,16 @@ bool BluetoothTerminal::send(const char *message)
       delay(instance.sendDelay);
     }
 
-    Serial.println(" sent.");
+    if (instance.isDebugEnabled)
+    {
+      Serial.println(" sent.");
+    }
   }
 
-  Serial.println("[BluetoothTerminal]   All message chunks were sent.");
+  if (instance.isDebugEnabled)
+  {
+    Serial.println("[BluetoothTerminal]   All message chunks were sent.");
+  }
 
   return true;
 }
@@ -387,9 +488,12 @@ void BluetoothTerminal::handleConnected(BLEDevice device)
 {
   this->deviceConnected = true;
 
-  Serial.print("[BluetoothTerminal] Device (address \"");
-  Serial.print(device.address());
-  Serial.println("\") was connected.");
+  if (this->isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] Device (address \"");
+    Serial.print(device.address());
+    Serial.println("\") was connected.");
+  }
 
   if (this->connectHandler)
   {
@@ -405,9 +509,12 @@ void BluetoothTerminal::handleDisconnected(BLEDevice device)
 {
   this->deviceConnected = false;
 
-  Serial.print("[BluetoothTerminal] Device (address \"");
-  Serial.print(device.address());
-  Serial.println("\") was disconnected.");
+  if (this->isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] Device (address \"");
+    Serial.print(device.address());
+    Serial.println("\") was disconnected.");
+  }
 
   if (this->disconnectHandler)
   {
@@ -424,11 +531,14 @@ void BluetoothTerminal::handleWritten(BLEDevice device, BLECharacteristic charac
   const uint8_t *value = characteristic.value();
   int length = characteristic.valueLength();
 
-  Serial.print("[BluetoothTerminal] Device (address \"");
-  Serial.print(device.address());
-  Serial.print("\") has written ");
-  Serial.print(length);
-  Serial.println(" bytes into the characteristic.");
+  if (this->isDebugEnabled)
+  {
+    Serial.print("[BluetoothTerminal] Device (address \"");
+    Serial.print(device.address());
+    Serial.print("\") has written ");
+    Serial.print(length);
+    Serial.println(" bytes into the characteristic.");
+  }
 
   // Dynamically allocate memory for the receive buffer, if it's not
   // initialized yet.
@@ -448,9 +558,12 @@ void BluetoothTerminal::handleWritten(BLEDevice device, BLECharacteristic charac
     {
       this->receiveBuffer[this->receiveBufferIndex] = '\0';
 
-      Serial.print("[BluetoothTerminal]   Message received: \"");
-      Serial.print(this->receiveBuffer);
-      Serial.println("\".");
+      if (this->isDebugEnabled)
+      {
+        Serial.print("[BluetoothTerminal]   Message received: \"");
+        Serial.print(this->receiveBuffer);
+        Serial.println("\".");
+      }
 
       if (this->receiveHandler)
       {
@@ -468,9 +581,12 @@ void BluetoothTerminal::handleWritten(BLEDevice device, BLECharacteristic charac
     {
       this->receiveBuffer[this->receiveBufferIndex] = '\0';
 
-      Serial.print("[BluetoothTerminal]   Receive buffer overflow, data discarded: \"");
-      Serial.print(this->receiveBuffer);
-      Serial.println("\".");
+      if (this->isDebugEnabled)
+      {
+        Serial.print("[BluetoothTerminal]   Receive buffer overflow, data discarded: \"");
+        Serial.print(this->receiveBuffer);
+        Serial.println("\".");
+      }
 
       this->receiveBufferIndex = 0;
     }

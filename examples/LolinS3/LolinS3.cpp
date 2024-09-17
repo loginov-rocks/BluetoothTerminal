@@ -27,6 +27,8 @@ void setup()
 
   Serial.println("Setting up Bluetooth Terminal...");
 
+  bluetoothTerminal.enableDebug(); // optional
+
   bluetoothTerminal.onConnect(handleConnect);       // optional
   bluetoothTerminal.onDisconnect(handleDisconnect); // optional
   bluetoothTerminal.onReceive(handleReceive);       // optional

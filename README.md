@@ -62,6 +62,7 @@ void handleReceive(const char *message)
 void setup()
 {
   Serial.begin(115200);
+  bluetoothTerminal.enableDebug();
   bluetoothTerminal.onConnect(handleConnect);
   bluetoothTerminal.onDisconnect(handleDisconnect);
   bluetoothTerminal.onReceive(handleReceive);
@@ -90,6 +91,8 @@ void loop()
 
 <!-- no toc -->
 * [BluetoothTerminal](#bluetoothterminal-1)
+  * [void enableDebug()](#void-enabledebug)
+  * [void disableDebug()](#void-disabledebug)
   * [void onConnect(std::function<void(BLEDevice)> handler)](#void-onconnectstdfunctionvoidbledevice-handler)
   * [void onDisconnect(std::function<void(BLEDevice)> handler)](#void-ondisconnectstdfunctionvoidbledevice-handler)
   * [void onReceive(std::function<void(const char*)> handler)](#void-onreceivestdfunctionvoidconst-char-handler)
@@ -122,10 +125,55 @@ BluetoothTerminal bluetoothTerminal;
 void setup()
 {
   // ...
+  bluetoothTerminal.start();
+  // ...
 }
 
 void loop()
 {
+  // ...
+  bluetoothTerminal.loop();
+  // ...
+}
+```
+
+---
+
+#### `void enableDebug()`
+
+Enables debug logging. When debug is enabled, the library logs every event (such as handler settings, UUID
+configuration, and message transmission) into `Serial`. This is useful for troubleshooting and observing the behavior
+of the library during development.
+
+Optional; debug is disabled by default.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.enableDebug();
+  // ...
+}
+```
+
+---
+
+#### `void disableDebug()`
+
+Disables debug logging. When debug is disabled, the library does not log any events into `Serial`. Use this method to
+silence debug logging after testing is complete or in production code.
+
+Optional; debug is disabled by default.
+
+Example:
+
+```cpp
+void setup()
+{
+  // ...
+  bluetoothTerminal.disableDebug();
   // ...
 }
 ```
@@ -448,11 +496,12 @@ void loop()
 }
 ```
 
-## Logging
+## Debug
 
-The library logs every event into `Serial` like this:
+When debug is enabled the library logs every event into `Serial` like this:
 
 ```
+[BluetoothTerminal] Debug enabled.
 [BluetoothTerminal] The connect handler is set.
 [BluetoothTerminal] The disconnect handler is set.
 [BluetoothTerminal] The receive handler is set.
@@ -477,7 +526,7 @@ The library logs every event into `Serial` like this:
 ```
 
 When a message is received and it is longer than the receive buffer size (including the receive separator) configured,
-the oldest data will be discarded with the following log message:
+the oldest data will be discarded with the following debug message:
 
 ```
 [BluetoothTerminal] Device (address "bc:d0:74:45:13:36") has written 20 bytes into the characteristic.
